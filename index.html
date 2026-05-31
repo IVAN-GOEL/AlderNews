@@ -528,46 +528,164 @@
   .profile-save-btn:hover { background: var(--rich-soil); }
   .profile-save-btn:disabled { opacity: 0.6; cursor: default; }
   .profile-success { display: none; background: #EAF2E9; border: 1px solid #3E6B3A; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--evergreen); margin-bottom: 1rem; text-align: center; }
-
-  /* ── SAVE BUTTON ── */
-  .save-btn {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500;
-    border: 1.5px solid var(--border); background: white; color: var(--text-muted);
-    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.18s; margin-left: auto; flex-shrink: 0;
-  }
-  .save-btn:hover { border-color: var(--amber-bark); color: var(--amber-bark); background: #fffdf7; }
-  .save-btn.saved { border-color: var(--evergreen); color: var(--evergreen); background: var(--pro-opposition-bg); }
-  .save-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
-  /* ── TOAST ── */
-  #save-toast {
-    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
-    background: var(--night-canopy); color: var(--fallen-leaf);
-    padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
-    z-index: 9999; opacity: 0; pointer-events: none; transition: all 0.3s; white-space: nowrap;
-  }
-  #save-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
-  /* ── PROFILE HERO ── */
-  .profile-hero {
-    background: var(--night-canopy); border-radius: 20px; padding: 2.5rem;
-    margin-bottom: 2rem; position: relative; overflow: hidden;
-  }
-  .profile-hero::before { content:''; position:absolute; top:-80px; right:-80px; width:280px; height:280px; border-radius:50%; background:rgba(232,196,106,0.07); pointer-events:none; }
-  .profile-hero::after  { content:''; position:absolute; bottom:-60px; left:-60px; width:200px; height:200px; border-radius:50%; background:rgba(62,107,58,0.12); pointer-events:none; }
-  /* ── SAVED PAGE ── */
-  .saved-item { background:white; border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:12px; display:flex; align-items:flex-start; gap:1.25rem; position:relative; }
-  .saved-item .rm-btn { position:absolute; top:1rem; right:1rem; padding:5px 10px; border-radius:6px; font-size:11px; font-weight:500; border:1px solid var(--border); background:white; color:var(--text-muted); cursor:pointer; font-family:'DM Sans',sans-serif; opacity:0; transition:all 0.15s; display:flex; align-items:center; gap:4px; }
-  .saved-item:hover .rm-btn { opacity:1; }
-  .saved-item .rm-btn:hover { border-color:#FECACA; color:#B91C1C; background:#FEF2F2; }
-  /* ── FORM CHECK ── */
-  .form-check-group { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  .form-check { display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:8px; border:1.5px solid var(--border); cursor:pointer; font-size:13px; color:var(--text-secondary); transition:all 0.15s; }
-  .form-check input { accent-color:var(--amber-bark); }
-  .form-check:hover { border-color:var(--amber-bark); background:#fffdf7; }
-</style>
-</head>
 <body>
 <div id="save-toast"></div>
+
+<script>
+  /* ════════════════════════════════════════════
+     GLOBALS — must load before Firebase module
+  ════════════════════════════════════════════ */
+  function _getSaved() { try { return JSON.parse(localStorage.getItem('an_saved')||'[]'); } catch(e) { return []; } }
+  function _setSaved(a) { localStorage.setItem('an_saved', JSON.stringify(a)); }
+  function _mkId(t) { return btoa(unescape(encodeURIComponent(t))).slice(0,20); }
+
+  window.goToPage = function(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    var el = document.getElementById('page-' + page);
+    if (el) el.classList.add('active');
+    window.scrollTo(0,0);
+    if (page === 'profile') _refreshProfileStat();
+    if (page === 'saved')   _renderSaved();
+  };
+
+  function showLoginError(msg) {
+    var el = document.getElementById('login-error');
+    el.textContent = msg; el.style.display = 'block';
+    var card = el.closest('.login-card');
+    card.style.animation = 'shake 0.35s ease';
+    card.addEventListener('animationend', function(){ card.style.animation=''; }, { once: true });
+  }
+  function clearLoginError() { document.getElementById('login-error').style.display = 'none'; }
+
+  function switchLocMode(mode) {
+    document.getElementById('loc-gps-section').style.display = mode==='gps' ? 'block' : 'none';
+    document.getElementById('loc-pin-section').style.display = mode==='pin' ? 'block' : 'none';
+    document.getElementById('loc-btn-gps').classList.toggle('active', mode==='gps');
+    document.getElementById('loc-btn-pin').classList.toggle('active', mode==='pin');
+  }
+
+  /* ── save / unsave ── */
+  var _toastTimer;
+  function _svgUnsaved() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'; }
+  function _svgSaved()   { return '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'; }
+  function _btnSaved(btn)   { btn.classList.add('saved');    btn.innerHTML = _svgSaved()   + 'Saved'; }
+  function _btnUnsaved(btn) { btn.classList.remove('saved'); btn.innerHTML = _svgUnsaved() + 'Save';  }
+  function _toast(msg) {
+    var t = document.getElementById('save-toast');
+    t.innerHTML = msg; t.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3000);
+  }
+
+  window.toggleSave = function(btn, title, author, readTime, type) {
+    var saved = _getSaved();
+    var id = _mkId(title);
+    var idx = saved.findIndex(function(a){ return a.id === id; });
+    if (idx > -1) {
+      saved.splice(idx, 1);
+      _btnUnsaved(btn);
+      _toast('Removed from saved list');
+    } else {
+      saved.unshift({ id:id, title:title, author:author, readTime:readTime, type:type, savedAt:new Date().toISOString() });
+      _btnSaved(btn);
+      _toast('Saved! <span onclick="goToPage('saved')" style="text-decoration:underline;cursor:pointer;">View list →</span>');
+    }
+    _setSaved(saved);
+    _refreshProfileStat();
+  };
+
+  function _refreshProfileStat() {
+    var el = document.getElementById('profile-stat-saved');
+    if (el) el.textContent = _getSaved().length;
+  }
+
+  /* ── saved page ── */
+  var _sf = 'all';
+  window.setSavedFilter = function(f, btn) {
+    _sf = f;
+    ['sf-all','sf-ruling','sf-opp'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+    _renderSaved();
+  };
+
+  function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function _ago(iso) {
+    var d = Math.floor((Date.now()-new Date(iso))/1000);
+    if (d < 60) return 'just now';
+    if (d < 3600) return Math.floor(d/60)+'m ago';
+    if (d < 86400) return Math.floor(d/3600)+'h ago';
+    return Math.floor(d/86400)+'d ago';
+  }
+
+  window.renderSavedPage = window._renderSaved = function() {
+    var all    = _getSaved();
+    var shown  = _sf === 'all' ? all : all.filter(function(a){ return a.type===_sf; });
+    var list   = document.getElementById('saved-list');
+    var empty  = document.getElementById('saved-empty');
+    var stats  = document.getElementById('saved-stats');
+    var sub    = document.getElementById('saved-subtitle');
+    if (!list) return;
+
+    document.getElementById('ss-total').textContent  = all.length;
+    document.getElementById('ss-ruling').textContent = all.filter(function(a){return a.type==='ruling';}).length;
+    document.getElementById('ss-opp').textContent    = all.filter(function(a){return a.type==='opposition';}).length;
+    if (sub) sub.textContent = all.length === 0 ? 'Your personal reading list' : all.length + ' article' + (all.length===1?'':'s') + ' saved';
+
+    if (all.length === 0) {
+      list.innerHTML=''; empty.style.display='block'; stats.style.display='none'; return;
+    }
+    empty.style.display='none'; stats.style.display='flex';
+
+    if (shown.length === 0) {
+      list.innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-muted);">No ' + (_sf==='ruling'?'pro-ruling':'pro-opposition') + ' articles saved yet.</p>';
+      return;
+    }
+
+    list.innerHTML = shown.map(function(a, i) {
+      var isR = a.type==='ruling';
+      return '<div class="saved-item">' +
+        '<div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--border);width:34px;text-align:right;flex-shrink:0;line-height:1;padding-top:3px;">' + String(i+1).padStart(2,'0') + '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<span class="tag ' + (isR?'tag-ruling':'tag-opposition') + '" style="margin-bottom:8px;display:inline-flex;align-items:center;gap:5px;"><span class="tag-dot"></span>' + (isR?'Pro-ruling':'Pro-opposition') + '</span>' +
+          '<div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--night-canopy);line-height:1.4;margin-bottom:8px;">' + _esc(a.title) + '</div>' +
+          '<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);">' +
+            '<span>' + _esc(a.author) + '</span><span>·</span><span>' + _esc(a.readTime) + '</span><span>·</span><span>Saved ' + _ago(a.savedAt) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<button class="rm-btn" onclick="removeSaved('' + a.id + '')">✕ Remove</button>' +
+      '</div>';
+    }).join('');
+  };
+
+  window.removeSaved = function(id) {
+    _setSaved(_getSaved().filter(function(a){ return a.id !== id; }));
+    document.querySelectorAll('.save-btn.saved').forEach(function(btn) {
+      var m = (btn.getAttribute('onclick')||'').match(/toggleSave\(this,'([^']+)'/);
+      if (m && _mkId(m[1]) === id) _btnUnsaved(btn);
+    });
+    _renderSaved();
+    _refreshProfileStat();
+  };
+
+  window.clearAllSaved = function() {
+    if (!confirm('Remove all saved articles?')) return;
+    _setSaved([]);
+    document.querySelectorAll('.save-btn.saved').forEach(function(btn){ _btnUnsaved(btn); });
+    _renderSaved();
+    _refreshProfileStat();
+  };
+
+  /* ── restore save button states on page load ── */
+  document.addEventListener('DOMContentLoaded', function() {
+    var ids = _getSaved().map(function(a){ return a.id; });
+    document.querySelectorAll('.save-btn').forEach(function(btn) {
+      var m = (btn.getAttribute('onclick')||'').match(/toggleSave\(this,'([^']+)'/);
+      if (m && ids.indexOf(_mkId(m[1])) > -1) _btnSaved(btn);
+    });
+    _refreshProfileStat();
+  });
+</script>
+
 <!-- LOGIN PAGE -->
 <div id="page-login" class="page active">
   <div class="login-wrap">
@@ -641,7 +759,6 @@
               <div class="author-avatar">RK</div>
               <span>Rohit Kumar · IIMC Delhi</span>
               <span>·</span><span>8 min read</span>
-              <button class="save-btn" onclick="toggleSave(this,'Government infrastructure push crosses ₹12 lakh crore','Rohit Kumar · IIMC Delhi','8 min read','ruling')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save</button>
             </div>
           </div>
           <div class="article-card">
@@ -652,7 +769,6 @@
               <div class="author-avatar opp">PS</div>
               <span>Priya Sharma · AJK Mass Comm</span>
               <span>·</span><span>6 min read</span>
-              <button class="save-btn" onclick="toggleSave(this,'Opposition demands JPC probe into infrastructure','Priya Sharma · AJK Mass Comm','6 min read','opposition')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save</button>
             </div>
           </div>
           <div class="article-card">
@@ -663,7 +779,6 @@
               <div class="author-avatar">AV</div>
               <span>Arjun Verma · Symbiosis Pune</span>
               <span>·</span><span>5 min read</span>
-              <button class="save-btn" onclick="toggleSave(this,'Digital public infrastructure wins praise at WEF','Arjun Verma · Symbiosis Pune','5 min read','ruling')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save</button>
             </div>
           </div>
         </div>
@@ -744,6 +859,7 @@
 </div>
 
 <!-- VIDEOS PAGE -->
+
 <div id="page-videos" class="page">
   <nav>
     <div class="nav-logo" onclick="goToPage('articles')">Alder<span>news</span></div>
@@ -1058,9 +1174,8 @@
 
 <!-- PROFILE PAGE -->
 
-<!-- ═══════════════════════════════════════════════════════════
-     PROFILE PAGE
-════════════════════════════════════════════════════════════ -->
+
+<!-- PROFILE PAGE -->
 <div id="page-profile" class="page">
   <nav>
     <div class="nav-logo" onclick="goToPage('articles')">Alder<span>news</span></div>
@@ -1072,8 +1187,6 @@
     <div class="nav-right" id="nav-right-profile"></div>
   </nav>
   <div class="profile-layout">
-
-    <!-- Hero -->
     <div class="profile-hero">
       <div style="display:flex;align-items:center;gap:2rem;position:relative;z-index:1;">
         <div style="position:relative;flex-shrink:0;">
@@ -1085,17 +1198,13 @@
           <div id="profile-display-name" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--fallen-leaf);margin-bottom:3px;">—</div>
           <div id="profile-display-email" style="font-size:13px;color:rgba(251,246,236,0.5);margin-bottom:5px;"></div>
           <div id="profile-display-location" style="font-size:12px;color:rgba(232,196,106,0.65);"></div>
-          <div style="display:flex;gap:1.5rem;margin-top:12px;">
-            <div>
-              <div id="profile-stat-saved" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--fallen-leaf);">0</div>
-              <div style="font-size:10px;color:rgba(251,246,236,0.4);letter-spacing:0.5px;margin-top:1px;">Saved articles</div>
-            </div>
+          <div style="margin-top:12px;">
+            <div id="profile-stat-saved" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--fallen-leaf);">0</div>
+            <div style="font-size:10px;color:rgba(251,246,236,0.4);letter-spacing:0.5px;">Saved articles</div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Quick links -->
     <div class="profile-card" style="margin-bottom:1.5rem;">
       <div class="profile-card-title">Quick links</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -1104,10 +1213,7 @@
         <button onclick="goToPage('creator')" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border);background:var(--cream);font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:'DM Sans',sans-serif;">✍️ Become a creator</button>
       </div>
     </div>
-
     <div id="profile-success" class="profile-success">✓ Profile saved!</div>
-
-    <!-- Personal info -->
     <div class="profile-card">
       <div class="profile-card-title">Personal information</div>
       <div class="profile-row">
@@ -1116,8 +1222,6 @@
       </div>
       <div class="profile-field" style="margin-bottom:0;"><label class="profile-label">Bio (optional)</label><input class="profile-input" id="pf-bio" type="text" placeholder="A short line about yourself"></div>
     </div>
-
-    <!-- Location -->
     <div class="profile-card">
       <div class="profile-card-title">Your location</div>
       <div class="location-options">
@@ -1133,8 +1237,6 @@
         <p style="font-size:12px;color:var(--text-muted);margin-top:6px;">Enter any valid Indian PIN code to set your city/region.</p>
       </div>
     </div>
-
-    <!-- Reading prefs -->
     <div class="profile-card">
       <div class="profile-card-title">Reading preferences</div>
       <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;line-height:1.5;">Your feed stays 50/50 balanced — these personalise which topics you see.</p>
@@ -1147,20 +1249,15 @@
         <label class="form-check"><input type="checkbox" id="pref-society"> Society &amp; culture</label>
       </div>
     </div>
-
     <button class="profile-save-btn" id="profile-save-btn" onclick="saveProfile()">Save profile</button>
-
-    <!-- Sign out -->
     <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:1.25rem 1.5rem;margin-top:1.5rem;">
-      <p style="font-size:13px;color:#7F1D1D;line-height:1.6;margin-bottom:10px;">Your data is stored securely and will be restored when you sign back in.</p>
+      <p style="font-size:13px;color:#7F1D1D;line-height:1.6;margin-bottom:10px;">Your data is stored securely and restored when you sign back in.</p>
       <button onclick="window._signOut()" style="padding:8px 18px;border-radius:8px;border:1.5px solid #FECACA;background:white;color:#B91C1C;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">Sign out</button>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SAVED ARTICLES PAGE
-════════════════════════════════════════════════════════════ -->
+<!-- SAVED ARTICLES PAGE -->
 <div id="page-saved" class="page">
   <nav>
     <div class="nav-logo" onclick="goToPage('articles')">Alder<span>news</span></div>
@@ -1183,8 +1280,6 @@
         <button class="region-pill"        id="sf-opp"    onclick="setSavedFilter('opposition',this)">Pro-opposition</button>
       </div>
     </div>
-
-    <!-- Stats bar (hidden when empty) -->
     <div id="saved-stats" style="display:none;flex-wrap:wrap;align-items:center;gap:1.5rem;background:white;border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;">
       <div><div id="ss-total" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--night-canopy);">0</div><div style="font-size:11px;color:var(--text-muted);">Total saved</div></div>
       <div style="width:1px;background:var(--border);height:40px;"></div>
@@ -1193,17 +1288,16 @@
       <div><div id="ss-opp" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--evergreen);">0</div><div style="font-size:11px;color:var(--text-muted);">Pro-opposition</div></div>
       <button onclick="clearAllSaved()" style="margin-left:auto;padding:6px 14px;border-radius:6px;border:1px solid #FECACA;background:white;color:#B91C1C;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">Clear all</button>
     </div>
-
     <div id="saved-list"></div>
-
     <div id="saved-empty" style="text-align:center;padding:5rem 2rem;">
       <div style="font-size:40px;margin-bottom:1rem;">🔖</div>
       <h3 style="font-family:'Playfair Display',serif;font-size:22px;color:var(--night-canopy);margin-bottom:8px;">Your reading list is empty</h3>
-      <p style="font-size:14px;color:var(--text-muted);line-height:1.6;max-width:320px;margin:0 auto 1.5rem;">Hit <strong>Save</strong> on any article to add it here.</p>
+      <p style="font-size:14px;color:var(--text-muted);max-width:320px;margin:0 auto 1.5rem;">Hit <strong>Save</strong> on any article to add it here.</p>
       <button onclick="goToPage('articles')" style="padding:11px 22px;border-radius:8px;background:var(--night-canopy);color:var(--fallen-leaf);font-size:14px;font-weight:500;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;">Browse articles</button>
     </div>
   </div>
 </div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
@@ -1391,7 +1485,7 @@
       </div>
       <div style="padding:6px 0;">
         <div onclick="closeMenu();goToPage('profile')" style="padding:9px 16px;font-size:13px;color:var(--text-secondary);cursor:pointer;" onmouseover="this.style.background='#fffdf7'" onmouseout="this.style.background=''">My profile</div>
-        <div style="padding:9px 16px;font-size:13px;color:var(--text-secondary);cursor:pointer;" onmouseover="this.style.background='#fffdf7'" onmouseout="this.style.background=''">Saved articles</div>
+        <div style="padding:9px 16px;font-size:13px;color:var(--text-secondary);cursor:pointer;" onclick="closeMenu();goToPage('saved')" onmouseover="this.style.background='#fffdf7'" onmouseout="this.style.background=''">Saved articles</div>
         <div onclick="window._signOut()" style="padding:9px 16px;font-size:13px;color:#B91C1C;cursor:pointer;border-top:1px solid var(--border);margin-top:6px;" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background=''">Sign out</div>
       </div>`;
     document.body.appendChild(menu);
@@ -1500,170 +1594,5 @@
   });
 </script>
 
-<script>
-  /* ── globals ── */
-  function _getSaved() { try { return JSON.parse(localStorage.getItem('an_saved')||'[]'); } catch(e) { return []; } }
-  function _setSaved(a) { localStorage.setItem('an_saved', JSON.stringify(a)); }
-  function _mkId(t) { return btoa(unescape(encodeURIComponent(t))).slice(0,20); }
-
-  window.goToPage = function(page) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const el = document.getElementById('page-' + page);
-    if (el) el.classList.add('active');
-    window.scrollTo(0,0);
-    if (page === 'profile') _refreshProfileStat();
-    if (page === 'saved')   _renderSaved();
-  };
-
-  function showLoginError(msg) {
-    const el = document.getElementById('login-error');
-    el.textContent = msg; el.style.display = 'block';
-    const card = el.closest('.login-card');
-    card.style.animation = 'shake 0.35s ease';
-    card.addEventListener('animationend', () => card.style.animation = '', { once: true });
-  }
-  function clearLoginError() { document.getElementById('login-error').style.display = 'none'; }
-
-  function switchLocMode(mode) {
-    document.getElementById('loc-gps-section').style.display = mode === 'gps' ? 'block' : 'none';
-    document.getElementById('loc-pin-section').style.display = mode === 'pin' ? 'block' : 'none';
-    document.getElementById('loc-btn-gps').classList.toggle('active', mode === 'gps');
-    document.getElementById('loc-btn-pin').classList.toggle('active', mode === 'pin');
-  }
-
-  /* ── save / unsave ── */
-  window.toggleSave = function(btn, title, author, readTime, type) {
-    const saved = _getSaved();
-    const id = _mkId(title);
-    const idx = saved.findIndex(a => a.id === id);
-    if (idx > -1) {
-      saved.splice(idx, 1);
-      _btnUnsaved(btn);
-      _toast('Removed from saved list');
-    } else {
-      saved.unshift({ id, title, author, readTime, type, savedAt: new Date().toISOString() });
-      _btnSaved(btn);
-      _toast('✓ Saved! <span onclick="goToPage(\'saved\')" style="text-decoration:underline;cursor:pointer;color:var(--fallen-leaf);">View list →</span>');
-    }
-    _setSaved(saved);
-    _refreshProfileStat();
-  };
-
-  function _btnSaved(btn) {
-    btn.classList.add('saved');
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Saved';
-  }
-  function _btnUnsaved(btn) {
-    btn.classList.remove('saved');
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save';
-  }
-
-  let _toastTimer;
-  function _toast(msg) {
-    const t = document.getElementById('save-toast');
-    t.innerHTML = msg; t.classList.add('show');
-    clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
-  }
-
-  /* ── restore save buttons on load ── */
-  document.addEventListener('DOMContentLoaded', () => {
-    const ids = _getSaved().map(a => a.id);
-    document.querySelectorAll('.save-btn').forEach(btn => {
-      const m = (btn.getAttribute('onclick')||'').match(/toggleSave\(this,'([^']+)'/);
-      if (m && ids.includes(_mkId(m[1]))) _btnSaved(btn);
-    });
-    _refreshProfileStat();
-  });
-
-  /* ── profile stat ── */
-  function _refreshProfileStat() {
-    const el = document.getElementById('profile-stat-saved');
-    if (el) el.textContent = _getSaved().length;
-  }
-
-  /* ── saved page render ── */
-  let _sf = 'all';
-  window.setSavedFilter = function(f, btn) {
-    _sf = f;
-    document.querySelectorAll('#sf-all,#sf-ruling,#sf-opp').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    _renderSaved();
-  };
-
-  window._renderSaved = window.renderSavedPage = function() {
-    const all   = _getSaved();
-    const shown = _sf === 'all' ? all : all.filter(a => a.type === _sf);
-    const list  = document.getElementById('saved-list');
-    const empty = document.getElementById('saved-empty');
-    const stats = document.getElementById('saved-stats');
-    const sub   = document.getElementById('saved-subtitle');
-    if (!list) return;
-
-    document.getElementById('ss-total').textContent  = all.length;
-    document.getElementById('ss-ruling').textContent = all.filter(a=>a.type==='ruling').length;
-    document.getElementById('ss-opp').textContent    = all.filter(a=>a.type==='opposition').length;
-    sub.textContent = all.length === 0 ? 'Your personal reading list' : `${all.length} article${all.length===1?'':'s'} saved`;
-
-    if (all.length === 0) {
-      list.innerHTML=''; empty.style.display='block'; stats.style.display='none'; return;
-    }
-    empty.style.display = 'none'; stats.style.display = 'flex';
-    if (shown.length === 0) {
-      list.innerHTML = `<p style="text-align:center;padding:2rem;color:var(--text-muted);">No ${_sf==='ruling'?'pro-ruling':'pro-opposition'} articles saved yet.</p>`;
-      return;
-    }
-    list.innerHTML = shown.map((a,i) => {
-      const isR = a.type==='ruling';
-      return `<div class="saved-item">
-        <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--border);width:34px;text-align:right;flex-shrink:0;line-height:1;padding-top:3px;">${String(i+1).padStart(2,'0')}</div>
-        <div style="flex:1;min-width:0;">
-          <span class="tag ${isR?'tag-ruling':'tag-opposition'}" style="margin-bottom:8px;display:inline-flex;"><span class="tag-dot"></span>${isR?'Pro-ruling':'Pro-opposition'}</span>
-          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--night-canopy);line-height:1.4;margin-bottom:8px;">${_esc(a.title)}</div>
-          <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);">
-            <span>${_esc(a.author)}</span><span>·</span><span>${_esc(a.readTime)}</span><span>·</span><span>Saved ${_ago(a.savedAt)}</span>
-          </div>
-        </div>
-        <button class="rm-btn" onclick="removeSaved('${a.id}')">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>Remove
-        </button>
-      </div>`;
-    }).join('');
-  };
-
-  window.removeSaved = function(id) {
-    _setSaved(_getSaved().filter(a => a.id !== id));
-    // reset matching save button
-    document.querySelectorAll('.save-btn.saved').forEach(btn => {
-      const m = (btn.getAttribute('onclick')||'').match(/toggleSave\(this,'([^']+)'/);
-      if (m && _mkId(m[1]) === id) _btnUnsaved(btn);
-    });
-    _renderSaved();
-    _refreshProfileStat();
-  };
-
-  window.clearAllSaved = function() {
-    if (!confirm('Remove all saved articles?')) return;
-    _setSaved([]);
-    document.querySelectorAll('.save-btn.saved').forEach(btn => _btnUnsaved(btn));
-    _renderSaved();
-    _refreshProfileStat();
-  };
-
-  function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-  function _ago(iso) {
-    const d = Math.floor((Date.now()-new Date(iso))/1000);
-    if (d < 60) return 'just now';
-    if (d < 3600) return Math.floor(d/60)+'m ago';
-    if (d < 86400) return Math.floor(d/3600)+'h ago';
-    return Math.floor(d/86400)+'d ago';
-  }
-</script>
-
-<style>
-  @keyframes shake {
-    0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
-  }
-</style>
 </body>
 </html>
