@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile — Aldernews</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FBF6EC;
+    --fallen-leaf: #E8C46A;
+    --amber-bark: #C47C2B;
+    --rich-soil: #6B3D14;
+    --evergreen: #3E6B3A;
+    --night-canopy: #1C3320;
+    --pro-ruling-bg: #FDF3E3;
+    --pro-ruling-text: #6B3D14;
+    --pro-opposition-bg: #EAF2E9;
+    --text-primary: #1C1208;
+    --text-secondary: #6B5A45;
+    --text-muted: #9C8A74;
+    --border: rgba(107,61,20,0.12);
+    --border-strong: rgba(107,61,20,0.25);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text-primary); min-height: 100vh; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--night-canopy);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+    border-bottom: 2px solid var(--fallen-leaf);
+  }
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--fallen-leaf);
+    text-decoration: none; letter-spacing: -0.3px;
+  }
+  .nav-logo span { color: var(--cream); font-weight: 400; }
+  .back-btn {
+    padding: 7px 16px; border-radius: 6px;
+    background: rgba(232,196,106,0.15); color: var(--fallen-leaf);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none;
+    font-family: 'DM Sans', sans-serif;
+    text-decoration: none; display: flex; align-items: center; gap: 6px;
+    transition: background 0.2s;
+  }
+  .back-btn:hover { background: rgba(232,196,106,0.25); }
+
+  /* LAYOUT */
+  .layout { max-width: 620px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+
+  /* NOT LOGGED IN STATE */
+  .auth-gate {
+    text-align: center; padding: 4rem 2rem;
+    background: white; border-radius: 16px;
+    border: 1px solid var(--border);
+  }
+  .auth-gate h2 { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--night-canopy); margin-bottom: 10px; }
+  .auth-gate p { font-size: 14px; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .auth-gate a {
+    display: inline-block; padding: 11px 24px;
+    background: var(--night-canopy); color: var(--fallen-leaf);
+    border-radius: 8px; font-size: 14px; font-weight: 500;
+    text-decoration: none; transition: background 0.2s;
+  }
+  .auth-gate a:hover { background: var(--rich-soil); }
+
+  /* LOADING */
+  .loading { text-align: center; padding: 4rem; color: var(--text-muted); font-size: 14px; }
+
+  /* AVATAR SECTION */
+  .avatar-section {
+    display: flex; align-items: center; gap: 1.5rem;
+    background: white; border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.75rem; margin-bottom: 1.25rem;
+  }
+  .avatar-wrap { position: relative; flex-shrink: 0; cursor: pointer; }
+  .avatar {
+    width: 88px; height: 88px; border-radius: 50%;
+    background: var(--fallen-leaf); color: var(--night-canopy);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 700;
+    font-family: 'Playfair Display', serif;
+    overflow: hidden; border: 3px solid var(--border);
+    transition: opacity 0.2s;
+  }
+  .avatar:hover { opacity: 0.85; }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-edit-badge {
+    position: absolute; bottom: 2px; right: 2px;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--night-canopy); border: 2px solid white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; pointer-events: none;
+  }
+  .avatar-info h3 { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--night-canopy); margin-bottom: 3px; }
+  .avatar-info .email { font-size: 13px; color: var(--text-muted); }
+  .avatar-info .location-tag { font-size: 12px; color: var(--amber-bark); margin-top: 5px; }
+
+  /* CARDS */
+  .card { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 1.25rem; }
+  .card-title { font-size: 11px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1.25rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+  /* FIELDS */
+  .field { margin-bottom: 1.1rem; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
+  .field input, .field select {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    background: var(--cream); font-size: 14px;
+    color: var(--text-primary); font-family: 'DM Sans', sans-serif;
+    outline: none; transition: border-color 0.2s, background 0.2s;
+    appearance: none;
+  }
+  .field input:focus, .field select:focus { border-color: var(--amber-bark); background: white; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* LOCATION TOGGLE */
+  .loc-toggle { display: flex; gap: 8px; margin-bottom: 12px; }
+  .loc-opt {
+    flex: 1; padding: 10px; border-radius: 8px;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border: 1.5px solid var(--border); background: white;
+    color: var(--text-secondary); font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s; text-align: center;
+  }
+  .loc-opt.active { border-color: var(--amber-bark); background: var(--pro-ruling-bg); color: var(--pro-ruling-text); }
+  .loc-panel { display: none; }
+  .loc-panel.visible { display: block; }
+  .gps-btn {
+    width: 100%; padding: 11px;
+    border-radius: 8px; border: 1.5px dashed var(--border-strong);
+    background: var(--cream); font-size: 13px;
+    color: var(--text-secondary); cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: border-color 0.2s;
+  }
+  .gps-btn:hover { border-color: var(--amber-bark); }
+  .gps-status { font-size: 12px; color: var(--text-muted); margin-top: 8px; text-align: center; min-height: 18px; }
+
+  /* SAVE BUTTON */
+  .save-btn {
+    width: 100%; padding: 13px;
+    background: var(--night-canopy); color: var(--fallen-leaf);
+    border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 500; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: background 0.2s;
+  }
+  .save-btn:hover { background: var(--rich-soil); }
+  .save-btn:disabled { opacity: 0.55; cursor: default; }
+
+  /* SUCCESS / ERROR */
+  .toast {
+    display: none; border-radius: 8px; padding: 11px 16px;
+    font-size: 13px; margin-bottom: 1rem; text-align: center;
+  }
+  .toast.success { background: var(--pro-opposition-bg); border: 1px solid var(--evergreen); color: var(--evergreen); }
+  .toast.error { background: #FEF2F2; border: 1px solid #FECACA; color: #B91C1C; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">Alder<span>news</span></a>
+  <a class="back-btn" href="index.html">← Back to Aldernews</a>
+</nav>
+
+<div class="layout" id="app">
+  <div class="loading">Loading…</div>
+</div>
+
+<input type="file" id="avatar-input" accept="image/*" style="display:none">
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA5hUL49V6C9fN1cQ16oBxObw2XGtiLz7o",
+    authDomain: "aldernews-8a170.firebaseapp.com",
+    projectId: "aldernews-8a170",
+    storageBucket: "aldernews-8a170.firebasestorage.app",
+    messagingSenderId: "540643966857",
+    appId: "1:540643966857:web:5328d9db1d6d22c9e46b58"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let avatarBase64 = null;
+  let locMode = 'gps';
+  let detectedLocation = null;
+
+  // ── Auth gate ────────────────────────────────────────────────
+  onAuthStateChanged(auth, async user => {
+    const app = document.getElementById('app');
+    if (!user) {
+      app.innerHTML = `
+        <div class="auth-gate">
+          <h2>You're not signed in</h2>
+          <p>Sign in to Aldernews to set up your profile.</p>
+          <a href="index.html">Go to sign in</a>
+        </div>`;
+      return;
+    }
+    renderProfile(user);
+    await loadProfile(user);
+  });
+
+  // ── Render page ──────────────────────────────────────────────
+  function renderProfile(user) {
+    const name = user.displayName || user.email.split('@')[0];
+    const initials = name.slice(0, 2).toUpperCase();
+    document.getElementById('app').innerHTML = `
+      <div class="avatar-section">
+        <div class="avatar-wrap" onclick="document.getElementById('avatar-input').click()" title="Change photo">
+          <div class="avatar" id="avatar-display">${initials}</div>
+          <div class="avatar-edit-badge">✏️</div>
+        </div>
+        <div class="avatar-info">
+          <h3 id="disp-name">${name}</h3>
+          <div class="email">${user.email}</div>
+          <div class="location-tag" id="disp-location"></div>
+        </div>
+      </div>
+
+      <div id="toast" class="toast"></div>
+
+      <div class="card">
+        <div class="card-title">Personal information</div>
+        <div class="two-col">
+          <div class="field">
+            <label>Display name</label>
+            <input id="pf-name" type="text" placeholder="Your name">
+          </div>
+          <div class="field">
+            <label>Age</label>
+            <input id="pf-age" type="number" min="13" max="100" placeholder="e.g. 22">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Your location</div>
+        <div class="loc-toggle">
+          <button class="loc-opt active" id="btn-gps" onclick="setLocMode('gps')">📍 Use my location</button>
+          <button class="loc-opt" id="btn-pin" onclick="setLocMode('pin')">🔢 Enter PIN code</button>
+        </div>
+        <div class="loc-panel visible" id="panel-gps">
+          <button class="gps-btn" onclick="requestLocation()">Allow location access</button>
+          <div class="gps-status" id="gps-status"></div>
+        </div>
+        <div class="loc-panel" id="panel-pin">
+          <div class="field" style="margin-bottom:0">
+            <label>6-digit Indian PIN code</label>
+            <input id="pf-pin" type="text" maxlength="6" placeholder="e.g. 110001">
+          </div>
+        </div>
+      </div>
+
+      <button class="save-btn" id="save-btn" onclick="saveProfile()">Save profile</button>
+    `;
+
+    // Avatar file input
+    document.getElementById('avatar-input').addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        avatarBase64 = e.target.result;
+        document.getElementById('avatar-display').innerHTML = `<img src="${avatarBase64}">`;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ── Load saved profile ───────────────────────────────────────
+  async function loadProfile(user) {
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (!snap.exists()) return;
+      const d = snap.data();
+
+      if (d.displayName) document.getElementById('pf-name').value = d.displayName;
+      if (d.age) document.getElementById('pf-age').value = d.age;
+      if (d.pincode) document.getElementById('pf-pin').value = d.pincode;
+      if (d.avatarUrl) {
+        avatarBase64 = d.avatarUrl;
+        document.getElementById('avatar-display').innerHTML = `<img src="${d.avatarUrl}">`;
+      }
+      if (d.displayName) document.getElementById('disp-name').textContent = d.displayName;
+      if (d.locationLabel) document.getElementById('disp-location').textContent = '📍 ' + d.locationLabel;
+      if (d.locMode) setLocMode(d.locMode);
+      if (d.detectedLocation) detectedLocation = d.detectedLocation;
+    } catch(e) {
+      console.error('Failed to load profile:', e);
+    }
+  }
+
+  // ── Save profile ─────────────────────────────────────────────
+  window.saveProfile = async function() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const btn = document.getElementById('save-btn');
+    btn.textContent = 'Saving…'; btn.disabled = true;
+
+    try {
+      const name = document.getElementById('pf-name').value.trim();
+      const age = document.getElementById('pf-age').value;
+      const pin = document.getElementById('pf-pin')?.value.trim();
+
+      let locationLabel = '';
+      if (locMode === 'pin' && pin) {
+        locationLabel = await resolvePincode(pin) || pin;
+      } else if (detectedLocation) {
+        locationLabel = detectedLocation;
+      }
+
+      const payload = {
+        displayName: name,
+        age: age ? parseInt(age) : null,
+        locMode,
+        locationLabel,
+        detectedLocation: detectedLocation || null,
+        pincode: pin || null,
+        avatarUrl: avatarBase64 || null,
+        updatedAt: new Date().toISOString()
+      };
+
+      await setDoc(doc(db, 'users', user.uid), payload, { merge: true });
+
+      if (name) document.getElementById('disp-name').textContent = name;
+      if (locationLabel) document.getElementById('disp-location').textContent = '📍 ' + locationLabel;
+
+      showToast('✓ Profile saved!', 'success');
+    } catch(e) {
+      showToast('Failed to save. Check your connection.', 'error');
+      console.error(e);
+    } finally {
+      btn.textContent = 'Save profile'; btn.disabled = false;
+    }
+  };
+
+  // ── Location ─────────────────────────────────────────────────
+  window.setLocMode = function(mode) {
+    locMode = mode;
+    document.getElementById('btn-gps').classList.toggle('active', mode === 'gps');
+    document.getElementById('btn-pin').classList.toggle('active', mode === 'pin');
+    document.getElementById('panel-gps').classList.toggle('visible', mode === 'gps');
+    document.getElementById('panel-pin').classList.toggle('visible', mode === 'pin');
+  };
+
+  window.requestLocation = function() {
+    const status = document.getElementById('gps-status');
+    status.style.color = 'var(--text-muted)';
+    status.textContent = 'Requesting location…';
+    if (!navigator.geolocation) {
+      status.textContent = 'Geolocation not supported by your browser.';
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(async pos => {
+      try {
+        const { latitude, longitude } = pos.coords;
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+        const data = await res.json();
+        const city = data.address.city || data.address.town || data.address.village || data.address.county || '';
+        const state = data.address.state || '';
+        detectedLocation = [city, state].filter(Boolean).join(', ');
+        status.textContent = '✓ ' + detectedLocation;
+        status.style.color = 'var(--evergreen)';
+      } catch(e) {
+        status.textContent = 'Could not resolve location name.';
+      }
+    }, () => {
+      status.textContent = 'Access denied — try using a PIN code instead.';
+      status.style.color = '#B91C1C';
+    });
+  };
+
+  // ── Pincode API ──────────────────────────────────────────────
+  async function resolvePincode(pin) {
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+      const data = await res.json();
+      if (data[0].Status === 'Success') {
+        const p = data[0].PostOffice[0];
+        return `${p.District}, ${p.State}`;
+      }
+    } catch(e) {}
+    return null;
+  }
+
+  // ── Toast ────────────────────────────────────────────────────
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type}`;
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 3500);
+  }
+</script>
+</body>
+</html>
