@@ -528,9 +528,34 @@
   .profile-save-btn:hover { background: var(--rich-soil); }
   .profile-save-btn:disabled { opacity: 0.6; cursor: default; }
   .profile-success { display: none; background: #EAF2E9; border: 1px solid #3E6B3A; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--evergreen); margin-bottom: 1rem; text-align: center; }
+
+  /* SAVE BUTTON */
+  .save-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 11px; border-radius: 6px;
+    font-size: 12px; font-weight: 500;
+    border: 1.5px solid var(--border);
+    background: white; color: var(--text-muted);
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.18s; margin-left: auto;
+  }
+  .save-btn:hover { border-color: var(--amber-bark); color: var(--amber-bark); background: #fffdf7; }
+  .save-btn.saved { border-color: var(--evergreen); color: var(--evergreen); background: var(--pro-opposition-bg); }
+  .save-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+  /* SAVE TOAST */
+  #save-toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--night-canopy); color: var(--fallen-leaf);
+    padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    z-index: 999; opacity: 0; pointer-events: none;
+    transition: all 0.3s; white-space: nowrap;
+  }
+  #save-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
+<div id="save-toast">✓ Article saved to your reading list</div>
 
 <!-- LOGIN PAGE -->
 <div id="page-login" class="page active">
@@ -605,6 +630,9 @@
               <div class="author-avatar">RK</div>
               <span>Rohit Kumar · IIMC Delhi</span>
               <span>·</span><span>8 min read</span>
+              <button class="save-btn" onclick="toggleSave(this,'Government infrastructure push crosses ₹12 lakh crore milestone','Rohit Kumar · IIMC Delhi','8 min read','ruling')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save
+              </button>
             </div>
           </div>
           <div class="article-card">
@@ -615,6 +643,9 @@
               <div class="author-avatar opp">PS</div>
               <span>Priya Sharma · AJK Mass Comm</span>
               <span>·</span><span>6 min read</span>
+              <button class="save-btn" onclick="toggleSave(this,'Opposition demands JPC probe into infrastructure contract allocation','Priya Sharma · AJK Mass Comm','6 min read','opposition')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save
+              </button>
             </div>
           </div>
           <div class="article-card">
@@ -625,6 +656,9 @@
               <div class="author-avatar">AV</div>
               <span>Arjun Verma · Symbiosis Pune</span>
               <span>·</span><span>5 min read</span>
+              <button class="save-btn" onclick="toggleSave(this,'New digital public infrastructure framework wins praise at WEF','Arjun Verma · Symbiosis Pune','5 min read','ruling')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save
+              </button>
             </div>
           </div>
         </div>
@@ -633,27 +667,27 @@
         <div class="feed-item">
           <span class="tag tag-opposition"><span class="tag-dot"></span>Pro-opposition</span>
           <div class="feed-item-title">Unemployment data methodology questioned as youth joblessness figures disputed</div>
-          <div class="feed-item-meta"><span>Neha Iyer · Christ University</span><span>·</span><span>4 min read</span><span>·</span><span>2 hours ago</span></div>
+          <div class="feed-item-meta"><span>Neha Iyer · Christ University</span><span>·</span><span>4 min read</span><span>·</span><span>2 hours ago</span><button class="save-btn" onclick="toggleSave(this,'Unemployment data methodology questioned as youth joblessness figures disputed','Neha Iyer · Christ University','4 min read','opposition')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save</button></div>
         </div>
         <div class="feed-item">
           <span class="tag tag-ruling"><span class="tag-dot"></span>Pro-ruling</span>
           <div class="feed-item-title">Startup India scheme crosses 1.5 lakh registered startups, ministry confirms</div>
-          <div class="feed-item-meta"><span>Karan Mehta · Xavier's Mumbai</span><span>·</span><span>3 min read</span><span>·</span><span>4 hours ago</span></div>
+          <div class="feed-item-meta"><span>Karan Mehta · Xavier's Mumbai</span><span>·</span><span>3 min read</span><span>·</span><span>4 hours ago</span><button class="save-btn" onclick="toggleSave(this,'Startup India scheme crosses 1.5 lakh registered startups, ministry confirms','Karan Mehta · Xavier\'s Mumbai','3 min read','ruling')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save</button></div>
         </div>
         <div class="feed-item">
           <span class="tag tag-opposition"><span class="tag-dot"></span>Pro-opposition</span>
           <div class="feed-item-title">Press freedom index ranking drops for third consecutive year, report finds</div>
-          <div class="feed-item-meta"><span>Tanya Roy · Jadavpur University</span><span>·</span><span>7 min read</span><span>·</span><span>5 hours ago</span></div>
+          <div class="feed-item-meta"><span>Tanya Roy · Jadavpur University</span><span>·</span><span>7 min read</span><span>·</span><span>5 hours ago</span><button class="save-btn" onclick="toggleSave(this,'Press freedom index ranking drops for third consecutive year, report finds','Tanya Roy · Jadavpur University','7 min read','opposition')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save</button></div>
         </div>
         <div class="feed-item">
           <span class="tag tag-ruling"><span class="tag-dot"></span>Pro-ruling</span>
           <div class="feed-item-title">India's renewable energy capacity surpasses 200 GW, beats 2030 target early</div>
-          <div class="feed-item-meta"><span>Siddharth Rao · Manipal</span><span>·</span><span>5 min read</span><span>·</span><span>7 hours ago</span></div>
+          <div class="feed-item-meta"><span>Siddharth Rao · Manipal</span><span>·</span><span>5 min read</span><span>·</span><span>7 hours ago</span><button class="save-btn" onclick="toggleSave(this,'India\'s renewable energy capacity surpasses 200 GW, beats 2030 target early','Siddharth Rao · Manipal','5 min read','ruling')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save</button></div>
         </div>
         <div class="feed-item">
           <span class="tag tag-opposition"><span class="tag-dot"></span>Pro-opposition</span>
           <div class="feed-item-title">Electoral bonds case: Opposition demands full disclosure of donor-scheme linkages</div>
-          <div class="feed-item-meta"><span>Ananya Das · Delhi University</span><span>·</span><span>9 min read</span><span>·</span><span>9 hours ago</span></div>
+          <div class="feed-item-meta"><span>Ananya Das · Delhi University</span><span>·</span><span>9 min read</span><span>·</span><span>9 hours ago</span><button class="save-btn" onclick="toggleSave(this,'Electoral bonds case: Opposition demands full disclosure of donor-scheme linkages','Ananya Das · Delhi University','9 min read','opposition')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save</button></div>
         </div>
       </div>
       <div class="feed-sidebar">
@@ -1250,7 +1284,7 @@
       </div>
       <div style="padding:6px 0;">
         <div onclick="closeMenu();window.location.href='profile.html'" style="padding:9px 16px;font-size:13px;color:var(--text-secondary);cursor:pointer;" onmouseover="this.style.background='#fffdf7'" onmouseout="this.style.background=''">My profile</div>
-        <div style="padding:9px 16px;font-size:13px;color:var(--text-secondary);cursor:pointer;" onmouseover="this.style.background='#fffdf7'" onmouseout="this.style.background=''">Saved articles</div>
+        <div onclick="closeMenu();window.location.href='saved.html'" style="padding:9px 16px;font-size:13px;color:var(--text-secondary);cursor:pointer;" onmouseover="this.style.background='#fffdf7'" onmouseout="this.style.background=''">Saved articles</div>
         <div onclick="window._signOut()" style="padding:9px 16px;font-size:13px;color:#B91C1C;cursor:pointer;border-top:1px solid var(--border);margin-top:6px;" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background=''">Sign out</div>
       </div>`;
     document.body.appendChild(menu);
@@ -1386,6 +1420,52 @@
     document.getElementById('loc-btn-gps').classList.toggle('active', mode === 'gps');
     document.getElementById('loc-btn-pin').classList.toggle('active', mode === 'pin');
   }
+
+  // ── Save article functionality ────────────────────────────────
+  function getSavedArticles() {
+    try { return JSON.parse(localStorage.getItem('aldernews_saved') || '[]'); } catch(e) { return []; }
+  }
+  function setSavedArticles(arr) {
+    localStorage.setItem('aldernews_saved', JSON.stringify(arr));
+  }
+  window.toggleSave = function(btn, title, author, readTime, type) {
+    const saved = getSavedArticles();
+    const id = btoa(unescape(encodeURIComponent(title))).slice(0,20);
+    const idx = saved.findIndex(a => a.id === id);
+    if (idx > -1) {
+      saved.splice(idx, 1);
+      btn.classList.remove('saved');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save';
+      showToast('Article removed from saved list');
+    } else {
+      saved.unshift({ id, title, author, readTime, type, savedAt: new Date().toISOString() });
+      btn.classList.add('saved');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Saved';
+      showToast('✓ Article saved · <a href="saved.html" style="color:var(--fallen-leaf);text-decoration:underline;">View saved</a>');
+    }
+    setSavedArticles(saved);
+  };
+  function showToast(msg) {
+    const t = document.getElementById('save-toast');
+    t.innerHTML = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+  // Restore saved state on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const saved = getSavedArticles();
+    const ids = saved.map(a => a.id);
+    document.querySelectorAll('.save-btn').forEach(btn => {
+      const onclick = btn.getAttribute('onclick') || '';
+      const m = onclick.match(/toggleSave\(this,'([^']+)'/);
+      if (m) {
+        const id = btoa(unescape(encodeURIComponent(m[1]))).slice(0,20);
+        if (ids.includes(id)) {
+          btn.classList.add('saved');
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Saved';
+        }
+      }
+    });
+  });
 </script>
 
 <style>
