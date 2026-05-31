@@ -528,50 +528,28 @@
   .profile-save-btn:hover { background: var(--rich-soil); }
   .profile-save-btn:disabled { opacity: 0.6; cursor: default; }
   .profile-success { display: none; background: #EAF2E9; border: 1px solid #3E6B3A; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--evergreen); margin-bottom: 1rem; text-align: center; }
+</style>
+</head>
 <body>
+
 <div id="save-toast"></div>
 
 <script>
-  /* ════════════════════════════════════════════
-     GLOBALS — must load before Firebase module
-  ════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════
+     GLOBALS — save/unsave, navigation, saved page
+  ═══════════════════════════════════════ */
   function _getSaved() { try { return JSON.parse(localStorage.getItem('an_saved')||'[]'); } catch(e) { return []; } }
   function _setSaved(a) { localStorage.setItem('an_saved', JSON.stringify(a)); }
   function _mkId(t) { return btoa(unescape(encodeURIComponent(t))).slice(0,20); }
 
-  window.goToPage = function(page) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    var el = document.getElementById('page-' + page);
-    if (el) el.classList.add('active');
-    window.scrollTo(0,0);
-    if (page === 'profile') _refreshProfileStat();
-    if (page === 'saved')   _renderSaved();
-  };
-
-  function showLoginError(msg) {
-    var el = document.getElementById('login-error');
-    el.textContent = msg; el.style.display = 'block';
-    var card = el.closest('.login-card');
-    card.style.animation = 'shake 0.35s ease';
-    card.addEventListener('animationend', function(){ card.style.animation=''; }, { once: true });
-  }
-  function clearLoginError() { document.getElementById('login-error').style.display = 'none'; }
-
-  function switchLocMode(mode) {
-    document.getElementById('loc-gps-section').style.display = mode==='gps' ? 'block' : 'none';
-    document.getElementById('loc-pin-section').style.display = mode==='pin' ? 'block' : 'none';
-    document.getElementById('loc-btn-gps').classList.toggle('active', mode==='gps');
-    document.getElementById('loc-btn-pin').classList.toggle('active', mode==='pin');
-  }
-
-  /* ── save / unsave ── */
   var _toastTimer;
   function _svgUnsaved() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'; }
   function _svgSaved()   { return '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'; }
   function _btnSaved(btn)   { btn.classList.add('saved');    btn.innerHTML = _svgSaved()   + 'Saved'; }
-  function _btnUnsaved(btn) { btn.classList.remove('saved'); btn.innerHTML = _svgUnsaved() + 'Save';  }
+  function _btnUnsaved(btn) { btn.classList.remove('saved'); btn.innerHTML = _svgUnsaved() + 'Save'; }
   function _toast(msg) {
     var t = document.getElementById('save-toast');
+    if (!t) return;
     t.innerHTML = msg; t.classList.add('show');
     clearTimeout(_toastTimer);
     _toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3000);
@@ -599,7 +577,6 @@
     if (el) el.textContent = _getSaved().length;
   }
 
-  /* ── saved page ── */
   var _sf = 'all';
   window.setSavedFilter = function(f, btn) {
     _sf = f;
@@ -618,41 +595,40 @@
   }
 
   window.renderSavedPage = window._renderSaved = function() {
-    var all    = _getSaved();
-    var shown  = _sf === 'all' ? all : all.filter(function(a){ return a.type===_sf; });
-    var list   = document.getElementById('saved-list');
-    var empty  = document.getElementById('saved-empty');
-    var stats  = document.getElementById('saved-stats');
-    var sub    = document.getElementById('saved-subtitle');
+    var all   = _getSaved();
+    var shown = _sf === 'all' ? all : all.filter(function(a){ return a.type===_sf; });
+    var list  = document.getElementById('saved-list');
+    var empty = document.getElementById('saved-empty');
+    var stats = document.getElementById('saved-stats');
+    var sub   = document.getElementById('saved-subtitle');
     if (!list) return;
-
-    document.getElementById('ss-total').textContent  = all.length;
-    document.getElementById('ss-ruling').textContent = all.filter(function(a){return a.type==='ruling';}).length;
-    document.getElementById('ss-opp').textContent    = all.filter(function(a){return a.type==='opposition';}).length;
+    var ssTot = document.getElementById('ss-total');
+    var ssRul = document.getElementById('ss-ruling');
+    var ssOpp = document.getElementById('ss-opp');
+    if (ssTot) ssTot.textContent = all.length;
+    if (ssRul) ssRul.textContent = all.filter(function(a){return a.type==='ruling';}).length;
+    if (ssOpp) ssOpp.textContent = all.filter(function(a){return a.type==='opposition';}).length;
     if (sub) sub.textContent = all.length === 0 ? 'Your personal reading list' : all.length + ' article' + (all.length===1?'':'s') + ' saved';
-
     if (all.length === 0) {
-      list.innerHTML=''; empty.style.display='block'; stats.style.display='none'; return;
+      list.innerHTML=''; if(empty) empty.style.display='block'; if(stats) stats.style.display='none'; return;
     }
-    empty.style.display='none'; stats.style.display='flex';
-
+    if(empty) empty.style.display='none'; if(stats) stats.style.display='flex';
     if (shown.length === 0) {
       list.innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-muted);">No ' + (_sf==='ruling'?'pro-ruling':'pro-opposition') + ' articles saved yet.</p>';
       return;
     }
-
     list.innerHTML = shown.map(function(a, i) {
       var isR = a.type==='ruling';
-      return '<div class="saved-item">' +
-        '<div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--border);width:34px;text-align:right;flex-shrink:0;line-height:1;padding-top:3px;">' + String(i+1).padStart(2,'0') + '</div>' +
+      return '<div class="saved-item" style="background:white;border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:10px;display:flex;align-items:flex-start;gap:1rem;position:relative;">' +
+        '<div style="font-family:\'Playfair Display\',serif;font-size:24px;font-weight:700;color:var(--border);width:32px;text-align:right;flex-shrink:0;">' + String(i+1).padStart(2,'0') + '</div>' +
         '<div style="flex:1;min-width:0;">' +
           '<span class="tag ' + (isR?'tag-ruling':'tag-opposition') + '" style="margin-bottom:8px;display:inline-flex;align-items:center;gap:5px;"><span class="tag-dot"></span>' + (isR?'Pro-ruling':'Pro-opposition') + '</span>' +
-          '<div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--night-canopy);line-height:1.4;margin-bottom:8px;">' + _esc(a.title) + '</div>' +
+          '<div style="font-family:\'Playfair Display\',serif;font-size:17px;font-weight:600;color:var(--night-canopy);line-height:1.4;margin-bottom:8px;">' + _esc(a.title) + '</div>' +
           '<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);">' +
             '<span>' + _esc(a.author) + '</span><span>·</span><span>' + _esc(a.readTime) + '</span><span>·</span><span>Saved ' + _ago(a.savedAt) + '</span>' +
           '</div>' +
         '</div>' +
-        '<button class="rm-btn" onclick="removeSaved('' + a.id + '')">✕ Remove</button>' +
+        '<button onclick="removeSaved(\'' + a.id + '\')" style="position:absolute;top:1rem;right:1rem;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:white;color:var(--text-muted);font-size:11px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">✕ Remove</button>' +
       '</div>';
     }).join('');
   };
@@ -675,7 +651,6 @@
     _refreshProfileStat();
   };
 
-  /* ── restore save button states on page load ── */
   document.addEventListener('DOMContentLoaded', function() {
     var ids = _getSaved().map(function(a){ return a.id; });
     document.querySelectorAll('.save-btn').forEach(function(btn) {
@@ -859,7 +834,6 @@
 </div>
 
 <!-- VIDEOS PAGE -->
-
 <div id="page-videos" class="page">
   <nav>
     <div class="nav-logo" onclick="goToPage('articles')">Alder<span>news</span></div>
@@ -1173,9 +1147,6 @@
 
 
 <!-- PROFILE PAGE -->
-
-
-<!-- PROFILE PAGE -->
 <div id="page-profile" class="page">
   <nav>
     <div class="nav-logo" onclick="goToPage('articles')">Alder<span>news</span></div>
@@ -1187,30 +1158,16 @@
     <div class="nav-right" id="nav-right-profile"></div>
   </nav>
   <div class="profile-layout">
-    <div class="profile-hero">
-      <div style="display:flex;align-items:center;gap:2rem;position:relative;z-index:1;">
-        <div style="position:relative;flex-shrink:0;">
-          <div class="profile-avatar" id="profile-avatar-display" style="width:96px;height:96px;font-size:32px;border:3px solid rgba(232,196,106,0.35);"></div>
-          <div class="profile-avatar-edit" onclick="document.getElementById('avatar-file-input').click()" title="Change photo">✏️</div>
-          <input type="file" id="avatar-file-input" accept="image/*" style="display:none">
-        </div>
-        <div style="flex:1;">
-          <div id="profile-display-name" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--fallen-leaf);margin-bottom:3px;">—</div>
-          <div id="profile-display-email" style="font-size:13px;color:rgba(251,246,236,0.5);margin-bottom:5px;"></div>
-          <div id="profile-display-location" style="font-size:12px;color:rgba(232,196,106,0.65);"></div>
-          <div style="margin-top:12px;">
-            <div id="profile-stat-saved" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--fallen-leaf);">0</div>
-            <div style="font-size:10px;color:rgba(251,246,236,0.4);letter-spacing:0.5px;">Saved articles</div>
-          </div>
-        </div>
+    <div class="profile-avatar-section">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar" id="profile-avatar-display"></div>
+        <div class="profile-avatar-edit" onclick="document.getElementById('avatar-file-input').click()" title="Change photo">✏️</div>
+        <input type="file" id="avatar-file-input" accept="image/*" style="display:none">
       </div>
-    </div>
-    <div class="profile-card" style="margin-bottom:1.5rem;">
-      <div class="profile-card-title">Quick links</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button onclick="goToPage('saved')" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border);background:var(--cream);font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:'DM Sans',sans-serif;">🔖 Saved articles</button>
-        <button onclick="goToPage('articles')" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border);background:var(--cream);font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:'DM Sans',sans-serif;">← Back to feed</button>
-        <button onclick="goToPage('creator')" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border);background:var(--cream);font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:'DM Sans',sans-serif;">✍️ Become a creator</button>
+      <div class="profile-avatar-info">
+        <h3 id="profile-display-name">Your name</h3>
+        <p id="profile-display-email"></p>
+        <p id="profile-display-location" style="margin-top:4px;font-size:12px;color:var(--amber-bark);"></p>
       </div>
     </div>
     <div id="profile-success" class="profile-success">✓ Profile saved!</div>
@@ -1220,7 +1177,6 @@
         <div class="profile-field"><label class="profile-label">Display name</label><input class="profile-input" id="pf-name" type="text" placeholder="Your name"></div>
         <div class="profile-field"><label class="profile-label">Age</label><input class="profile-input" id="pf-age" type="number" min="13" max="100" placeholder="e.g. 22"></div>
       </div>
-      <div class="profile-field" style="margin-bottom:0;"><label class="profile-label">Bio (optional)</label><input class="profile-input" id="pf-bio" type="text" placeholder="A short line about yourself"></div>
     </div>
     <div class="profile-card">
       <div class="profile-card-title">Your location</div>
@@ -1228,76 +1184,14 @@
         <button class="loc-btn active" id="loc-btn-gps" onclick="switchLocMode('gps')">📍 Use my location</button>
         <button class="loc-btn" id="loc-btn-pin" onclick="switchLocMode('pin')">🔢 Enter PIN code</button>
       </div>
-      <div id="loc-gps-section">
-        <button onclick="requestLocation()" style="width:100%;padding:11px;border-radius:8px;border:1.5px dashed var(--border-strong);background:var(--cream);font-size:13px;color:var(--text-secondary);cursor:pointer;font-family:'DM Sans',sans-serif;">Allow location access</button>
-        <p id="gps-status" style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center;"></p>
-      </div>
-      <div id="loc-pin-section" style="display:none;">
-        <input class="profile-input" id="pf-pincode" type="text" maxlength="6" placeholder="6-digit Indian PIN code (e.g. 110001)">
-        <p style="font-size:12px;color:var(--text-muted);margin-top:6px;">Enter any valid Indian PIN code to set your city/region.</p>
-      </div>
-    </div>
-    <div class="profile-card">
-      <div class="profile-card-title">Reading preferences</div>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;line-height:1.5;">Your feed stays 50/50 balanced — these personalise which topics you see.</p>
-      <div class="form-check-group">
-        <label class="form-check"><input type="checkbox" id="pref-politics"> Politics &amp; governance</label>
-        <label class="form-check"><input type="checkbox" id="pref-economy"> Economy &amp; business</label>
-        <label class="form-check"><input type="checkbox" id="pref-environment"> Environment</label>
-        <label class="form-check"><input type="checkbox" id="pref-international"> International affairs</label>
-        <label class="form-check"><input type="checkbox" id="pref-science"> Science &amp; tech</label>
-        <label class="form-check"><input type="checkbox" id="pref-society"> Society &amp; culture</label>
-      </div>
+      <div id="loc-gps-section"><button onclick="requestLocation()" style="width:100%;padding:11px;border-radius:8px;border:1.5px dashed var(--border-strong);background:var(--cream);font-size:13px;color:var(--text-secondary);cursor:pointer;font-family:'DM Sans',sans-serif;">Allow location access</button><p id="gps-status" style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center;"></p></div>
+      <div id="loc-pin-section" style="display:none;"><input class="profile-input" id="pf-pincode" type="text" maxlength="6" placeholder="6-digit Indian PIN code (e.g. 110001)"><p style="font-size:12px;color:var(--text-muted);margin-top:6px;">Enter any valid Indian PIN code to set your city/region.</p></div>
     </div>
     <button class="profile-save-btn" id="profile-save-btn" onclick="saveProfile()">Save profile</button>
-    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:1.25rem 1.5rem;margin-top:1.5rem;">
-      <p style="font-size:13px;color:#7F1D1D;line-height:1.6;margin-bottom:10px;">Your data is stored securely and restored when you sign back in.</p>
-      <button onclick="window._signOut()" style="padding:8px 18px;border-radius:8px;border:1.5px solid #FECACA;background:white;color:#B91C1C;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">Sign out</button>
-    </div>
   </div>
 </div>
 
-<!-- SAVED ARTICLES PAGE -->
-<div id="page-saved" class="page">
-  <nav>
-    <div class="nav-logo" onclick="goToPage('articles')">Alder<span>news</span></div>
-    <div class="nav-links">
-      <button class="nav-link" onclick="goToPage('articles')">Articles</button>
-      <button class="nav-link" onclick="goToPage('videos')">Videos</button>
-      <button class="nav-link" onclick="goToPage('global')">Global</button>
-    </div>
-    <div class="nav-right" id="nav-right-saved"></div>
-  </nav>
-  <div class="main-layout">
-    <div class="page-header" style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-      <div>
-        <h1>Saved articles</h1>
-        <p id="saved-subtitle">Your personal reading list</p>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="region-pill active" id="sf-all"    onclick="setSavedFilter('all',this)">All</button>
-        <button class="region-pill"        id="sf-ruling" onclick="setSavedFilter('ruling',this)">Pro-ruling</button>
-        <button class="region-pill"        id="sf-opp"    onclick="setSavedFilter('opposition',this)">Pro-opposition</button>
-      </div>
-    </div>
-    <div id="saved-stats" style="display:none;flex-wrap:wrap;align-items:center;gap:1.5rem;background:white;border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;">
-      <div><div id="ss-total" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--night-canopy);">0</div><div style="font-size:11px;color:var(--text-muted);">Total saved</div></div>
-      <div style="width:1px;background:var(--border);height:40px;"></div>
-      <div><div id="ss-ruling" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--amber-bark);">0</div><div style="font-size:11px;color:var(--text-muted);">Pro-ruling</div></div>
-      <div style="width:1px;background:var(--border);height:40px;"></div>
-      <div><div id="ss-opp" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--evergreen);">0</div><div style="font-size:11px;color:var(--text-muted);">Pro-opposition</div></div>
-      <button onclick="clearAllSaved()" style="margin-left:auto;padding:6px 14px;border-radius:6px;border:1px solid #FECACA;background:white;color:#B91C1C;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">Clear all</button>
-    </div>
-    <div id="saved-list"></div>
-    <div id="saved-empty" style="text-align:center;padding:5rem 2rem;">
-      <div style="font-size:40px;margin-bottom:1rem;">🔖</div>
-      <h3 style="font-family:'Playfair Display',serif;font-size:22px;color:var(--night-canopy);margin-bottom:8px;">Your reading list is empty</h3>
-      <p style="font-size:14px;color:var(--text-muted);max-width:320px;margin:0 auto 1.5rem;">Hit <strong>Save</strong> on any article to add it here.</p>
-      <button onclick="goToPage('articles')" style="padding:11px 22px;border-radius:8px;background:var(--night-canopy);color:var(--fallen-leaf);font-size:14px;font-weight:500;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;">Browse articles</button>
-    </div>
-  </div>
-</div>
-
+<!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
@@ -1485,7 +1379,7 @@
       </div>
       <div style="padding:6px 0;">
         <div onclick="closeMenu();goToPage('profile')" style="padding:9px 16px;font-size:13px;color:var(--text-secondary);cursor:pointer;" onmouseover="this.style.background='#fffdf7'" onmouseout="this.style.background=''">My profile</div>
-        <div style="padding:9px 16px;font-size:13px;color:var(--text-secondary);cursor:pointer;" onclick="closeMenu();goToPage('saved')" onmouseover="this.style.background='#fffdf7'" onmouseout="this.style.background=''">Saved articles</div>
+        <div onclick="closeMenu();goToPage('saved')" style="padding:9px 16px;font-size:13px;color:var(--text-secondary);cursor:pointer;" onmouseover="this.style.background='#fffdf7'" onmouseout="this.style.background=''">Saved articles</div>
         <div onclick="window._signOut()" style="padding:9px 16px;font-size:13px;color:#B91C1C;cursor:pointer;border-top:1px solid var(--border);margin-top:6px;" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background=''">Sign out</div>
       </div>`;
     document.body.appendChild(menu);
@@ -1593,6 +1487,87 @@
     if (e.key === 'Enter') window.handleEmailLogin();
   });
 </script>
+
+<script>
+  // Non-module globals (goToPage, showLoginError, clearLoginError)
+  window.goToPage = function goToPage(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    var el = document.getElementById('page-' + page);
+    if (el) el.classList.add('active');
+    window.scrollTo(0, 0);
+    if (page === 'profile') { try { _refreshProfileStat && _refreshProfileStat(); } catch(e){} }
+    if (page === 'saved')   { try { window._renderSaved && window._renderSaved(); } catch(e){} }
+  }
+
+  function showLoginError(msg) {
+    const el = document.getElementById('login-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+    const card = el.closest('.login-card');
+    card.style.animation = 'shake 0.35s ease';
+    card.addEventListener('animationend', () => card.style.animation = '', { once: true });
+  }
+
+  function clearLoginError() {
+    document.getElementById('login-error').style.display = 'none';
+  }
+
+  function switchLocMode(mode) {
+    document.getElementById('loc-gps-section').style.display = mode === 'gps' ? 'block' : 'none';
+    document.getElementById('loc-pin-section').style.display = mode === 'pin' ? 'block' : 'none';
+    document.getElementById('loc-btn-gps').classList.toggle('active', mode === 'gps');
+    document.getElementById('loc-btn-pin').classList.toggle('active', mode === 'pin');
+  }
+</script>
+
+<style>
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+</style>
+<div id="page-saved" class="page">
+  <nav>
+    <div class="nav-logo" onclick="goToPage('articles')">Alder<span>news</span></div>
+    <div class="nav-links">
+      <button class="nav-link" onclick="goToPage('articles')">Articles</button>
+      <button class="nav-link" onclick="goToPage('videos')">Videos</button>
+      <button class="nav-link" onclick="goToPage('global')">Global</button>
+    </div>
+    <div class="nav-right" id="nav-right-saved"></div>
+  </nav>
+  <div class="main-layout">
+    <div class="page-header" style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div>
+        <h1>Saved articles</h1>
+        <p id="saved-subtitle">Your personal reading list</p>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="region-pill active" id="sf-all"    onclick="setSavedFilter('all',this)">All</button>
+        <button class="region-pill"        id="sf-ruling" onclick="setSavedFilter('ruling',this)">Pro-ruling</button>
+        <button class="region-pill"        id="sf-opp"    onclick="setSavedFilter('opposition',this)">Pro-opposition</button>
+      </div>
+    </div>
+    <div id="saved-stats" style="display:none;flex-wrap:wrap;align-items:center;gap:1.5rem;background:white;border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;">
+      <div><div id="ss-total" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--night-canopy);">0</div><div style="font-size:11px;color:var(--text-muted);">Total saved</div></div>
+      <div style="width:1px;background:var(--border);height:40px;"></div>
+      <div><div id="ss-ruling" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--amber-bark);">0</div><div style="font-size:11px;color:var(--text-muted);">Pro-ruling</div></div>
+      <div style="width:1px;background:var(--border);height:40px;"></div>
+      <div><div id="ss-opp" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--evergreen);">0</div><div style="font-size:11px;color:var(--text-muted);">Pro-opposition</div></div>
+      <button onclick="clearAllSaved()" style="margin-left:auto;padding:6px 14px;border-radius:6px;border:1px solid #FECACA;background:white;color:#B91C1C;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">Clear all</button>
+    </div>
+    <div id="saved-list"></div>
+    <div id="saved-empty" style="text-align:center;padding:5rem 2rem;">
+      <div style="font-size:40px;margin-bottom:1rem;">🔖</div>
+      <h3 style="font-family:'Playfair Display',serif;font-size:22px;color:var(--night-canopy);margin-bottom:8px;">Your reading list is empty</h3>
+      <p style="font-size:14px;color:var(--text-muted);max-width:320px;margin:0 auto 1.5rem;">Hit <strong>Save</strong> on any article to add it here.</p>
+      <button onclick="goToPage('articles')" style="padding:11px 22px;border-radius:8px;background:var(--night-canopy);color:var(--fallen-leaf);font-size:14px;font-weight:500;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;">Browse articles</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

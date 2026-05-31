@@ -261,9 +261,9 @@
   let currentFilter = 'all';
 
   function getSaved() {
-    try { return JSON.parse(localStorage.getItem('aldernews_saved') || '[]'); } catch(e) { return []; }
+    try { return JSON.parse(localStorage.getItem('an_saved') || '[]'); } catch(e) { return []; }
   }
-  function setSaved(arr) { localStorage.setItem('aldernews_saved', JSON.stringify(arr)); }
+  function setSaved(arr) { localStorage.setItem('an_saved', JSON.stringify(arr)); }
 
   function formatDate(iso) {
     const d = new Date(iso);

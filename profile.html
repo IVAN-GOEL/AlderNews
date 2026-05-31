@@ -345,7 +345,7 @@
     await loadProfile(user);
     // Saved articles count
     try {
-      const saved = JSON.parse(localStorage.getItem('aldernews_saved') || '[]');
+      const saved = JSON.parse(localStorage.getItem('an_saved') || '[]');
       document.getElementById('stat-saved').textContent = saved.length;
     } catch(e) {}
     // Member since
