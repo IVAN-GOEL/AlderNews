@@ -595,8 +595,11 @@
   };
 
   function _refreshProfileStat() {
+    var count = _getSaved().length;
     var el = document.getElementById('profile-stat-saved');
-    if (el) el.textContent = _getSaved().length;
+    if (el) el.textContent = count;
+    var el2 = document.getElementById('stat-saved');
+    if (el2) el2.textContent = count;
   }
 
   /* ── saved page ── */
@@ -644,15 +647,15 @@
     list.innerHTML = shown.map(function(a, i) {
       var isR = a.type==='ruling';
       return '<div class="saved-item">' +
-        '<div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--border);width:34px;text-align:right;flex-shrink:0;line-height:1;padding-top:3px;">' + String(i+1).padStart(2,'0') + '</div>' +
+        '<div style="font-family:Playfair Display,serif;font-size:26px;font-weight:700;color:var(--border);width:34px;text-align:right;flex-shrink:0;line-height:1;padding-top:3px;">' + String(i+1).padStart(2,'0') + '</div>' +
         '<div style="flex:1;min-width:0;">' +
           '<span class="tag ' + (isR?'tag-ruling':'tag-opposition') + '" style="margin-bottom:8px;display:inline-flex;align-items:center;gap:5px;"><span class="tag-dot"></span>' + (isR?'Pro-ruling':'Pro-opposition') + '</span>' +
-          '<div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--night-canopy);line-height:1.4;margin-bottom:8px;">' + _esc(a.title) + '</div>' +
+          '<div style="font-family:Playfair Display,serif;font-size:17px;font-weight:600;color:var(--night-canopy);line-height:1.4;margin-bottom:8px;">' + _esc(a.title) + '</div>' +
           '<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);">' +
             '<span>' + _esc(a.author) + '</span><span>·</span><span>' + _esc(a.readTime) + '</span><span>·</span><span>Saved ' + _ago(a.savedAt) + '</span>' +
           '</div>' +
         '</div>' +
-        '<button class="rm-btn" onclick="removeSaved('' + a.id + '')">✕ Remove</button>' +
+        '<button class="rm-btn" onclick="removeSaved(\'' + a.id + '\')">✕ Remove</button>' +
       '</div>';
     }).join('');
   };
@@ -1173,9 +1176,6 @@
 
 
 <!-- PROFILE PAGE -->
-
-
-<!-- PROFILE PAGE -->
 <div id="page-profile" class="page">
   <nav>
     <div class="nav-logo" onclick="goToPage('articles')">Alder<span>news</span></div>
@@ -1187,43 +1187,76 @@
     <div class="nav-right" id="nav-right-profile"></div>
   </nav>
   <div class="profile-layout">
+
+    <!-- HERO -->
     <div class="profile-hero">
-      <div style="display:flex;align-items:center;gap:2rem;position:relative;z-index:1;">
-        <div style="position:relative;flex-shrink:0;">
-          <div class="profile-avatar" id="profile-avatar-display" style="width:96px;height:96px;font-size:32px;border:3px solid rgba(232,196,106,0.35);"></div>
-          <div class="profile-avatar-edit" onclick="document.getElementById('avatar-file-input').click()" title="Change photo">✏️</div>
+      <div class="hero-inner">
+        <div class="avatar-wrap">
+          <div class="profile-avatar" id="profile-avatar-display">—</div>
+          <div class="avatar-edit-btn" onclick="document.getElementById('avatar-file-input').click()" title="Change photo">✏️</div>
           <input type="file" id="avatar-file-input" accept="image/*" style="display:none">
         </div>
-        <div style="flex:1;">
-          <div id="profile-display-name" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--fallen-leaf);margin-bottom:3px;">—</div>
-          <div id="profile-display-email" style="font-size:13px;color:rgba(251,246,236,0.5);margin-bottom:5px;"></div>
-          <div id="profile-display-location" style="font-size:12px;color:rgba(232,196,106,0.65);"></div>
-          <div style="margin-top:12px;">
-            <div id="profile-stat-saved" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--fallen-leaf);">0</div>
-            <div style="font-size:10px;color:rgba(251,246,236,0.4);letter-spacing:0.5px;">Saved articles</div>
+        <div class="hero-info">
+          <div class="hero-name" id="hero-name">Loading…</div>
+          <div class="hero-email" id="hero-email"></div>
+          <div class="hero-location" id="hero-location"></div>
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <div class="hero-stat-value" id="stat-saved">0</div>
+              <div class="hero-stat-label">Saved articles</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-value" id="stat-member">—</div>
+              <div class="hero-stat-label">Member since</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="profile-card" style="margin-bottom:1.5rem;">
-      <div class="profile-card-title">Quick links</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button onclick="goToPage('saved')" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border);background:var(--cream);font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:'DM Sans',sans-serif;">🔖 Saved articles</button>
-        <button onclick="goToPage('articles')" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border);background:var(--cream);font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:'DM Sans',sans-serif;">← Back to feed</button>
-        <button onclick="goToPage('creator')" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border);background:var(--cream);font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;font-family:'DM Sans',sans-serif;">✍️ Become a creator</button>
+
+    <div id="success-banner" class="success-banner">✓ Profile saved successfully!</div>
+
+    <!-- QUICK LINKS -->
+    <div class="section-card">
+      <div class="section-title">Quick links</div>
+      <div class="quick-links">
+        <span class="quick-link" onclick="goToPage('saved')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          Saved articles
+        </span>
+        <span class="quick-link" onclick="goToPage('articles')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Back to feed
+        </span>
+        <span class="quick-link" onclick="goToPage('creator')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Become a creator
+        </span>
       </div>
     </div>
-    <div id="profile-success" class="profile-success">✓ Profile saved!</div>
-    <div class="profile-card">
-      <div class="profile-card-title">Personal information</div>
-      <div class="profile-row">
-        <div class="profile-field"><label class="profile-label">Display name</label><input class="profile-input" id="pf-name" type="text" placeholder="Your name"></div>
-        <div class="profile-field"><label class="profile-label">Age</label><input class="profile-input" id="pf-age" type="number" min="13" max="100" placeholder="e.g. 22"></div>
+
+    <!-- PERSONAL INFO -->
+    <div class="section-card">
+      <div class="section-title">Personal information</div>
+      <div class="form-row">
+        <div class="form-field" style="margin-bottom:0">
+          <label class="form-label">Display name</label>
+          <input class="form-input" id="pf-name" type="text" placeholder="Your name">
+        </div>
+        <div class="form-field" style="margin-bottom:0">
+          <label class="form-label">Age</label>
+          <input class="form-input" id="pf-age" type="number" min="13" max="100" placeholder="e.g. 22">
+        </div>
       </div>
-      <div class="profile-field" style="margin-bottom:0;"><label class="profile-label">Bio (optional)</label><input class="profile-input" id="pf-bio" type="text" placeholder="A short line about yourself"></div>
+      <div class="form-field">
+        <label class="form-label">Bio (optional)</label>
+        <input class="form-input" id="pf-bio" type="text" placeholder="A short line about yourself">
+      </div>
     </div>
-    <div class="profile-card">
-      <div class="profile-card-title">Your location</div>
+
+    <!-- LOCATION -->
+    <div class="section-card">
+      <div class="section-title">Your location</div>
       <div class="location-options">
         <button class="loc-btn active" id="loc-btn-gps" onclick="switchLocMode('gps')">📍 Use my location</button>
         <button class="loc-btn" id="loc-btn-pin" onclick="switchLocMode('pin')">🔢 Enter PIN code</button>
@@ -1232,28 +1265,35 @@
         <button onclick="requestLocation()" style="width:100%;padding:11px;border-radius:8px;border:1.5px dashed var(--border-strong);background:var(--cream);font-size:13px;color:var(--text-secondary);cursor:pointer;font-family:'DM Sans',sans-serif;">Allow location access</button>
         <p id="gps-status" style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center;"></p>
       </div>
-      <div id="loc-pin-section" style="display:none;">
-        <input class="profile-input" id="pf-pincode" type="text" maxlength="6" placeholder="6-digit Indian PIN code (e.g. 110001)">
+      <div id="loc-pin-section" style="display:none">
+        <input class="form-input" id="pf-pincode" type="text" maxlength="6" placeholder="6-digit Indian PIN code (e.g. 110001)">
         <p style="font-size:12px;color:var(--text-muted);margin-top:6px;">Enter any valid Indian PIN code to set your city/region.</p>
       </div>
     </div>
-    <div class="profile-card">
-      <div class="profile-card-title">Reading preferences</div>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;line-height:1.5;">Your feed stays 50/50 balanced — these personalise which topics you see.</p>
-      <div class="form-check-group">
-        <label class="form-check"><input type="checkbox" id="pref-politics"> Politics &amp; governance</label>
-        <label class="form-check"><input type="checkbox" id="pref-economy"> Economy &amp; business</label>
-        <label class="form-check"><input type="checkbox" id="pref-environment"> Environment</label>
-        <label class="form-check"><input type="checkbox" id="pref-international"> International affairs</label>
-        <label class="form-check"><input type="checkbox" id="pref-science"> Science &amp; tech</label>
-        <label class="form-check"><input type="checkbox" id="pref-society"> Society &amp; culture</label>
+
+    <!-- READING PREFERENCES -->
+    <div class="section-card">
+      <div class="section-title">Reading preferences</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.5;">Your feed is always 50/50 balanced — these preferences let you personalise which topics you see more of.</p>
+      <div class="pref-grid">
+        <label class="pref-chip"><input type="checkbox" id="pref-politics"> Politics &amp; governance</label>
+        <label class="pref-chip"><input type="checkbox" id="pref-economy"> Economy &amp; business</label>
+        <label class="pref-chip"><input type="checkbox" id="pref-environment"> Environment</label>
+        <label class="pref-chip"><input type="checkbox" id="pref-international"> International affairs</label>
+        <label class="pref-chip"><input type="checkbox" id="pref-science"> Science &amp; technology</label>
+        <label class="pref-chip"><input type="checkbox" id="pref-society"> Society &amp; culture</label>
       </div>
     </div>
-    <button class="profile-save-btn" id="profile-save-btn" onclick="saveProfile()">Save profile</button>
-    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:1.25rem 1.5rem;margin-top:1.5rem;">
-      <p style="font-size:13px;color:#7F1D1D;line-height:1.6;margin-bottom:10px;">Your data is stored securely and restored when you sign back in.</p>
-      <button onclick="window._signOut()" style="padding:8px 18px;border-radius:8px;border:1.5px solid #FECACA;background:white;color:#B91C1C;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">Sign out</button>
+
+    <button class="save-btn" id="profile-save-btn" onclick="saveProfile()">Save profile</button>
+
+    <!-- DANGER ZONE -->
+    <div class="danger-zone" style="margin-top:2rem">
+      <div class="danger-title">Danger zone</div>
+      <p class="danger-text">Signing out will end your current session. Your saved articles and profile data are stored securely and will be restored when you sign back in.</p>
+      <button class="danger-btn" onclick="window._signOut()">Sign out</button>
     </div>
+
   </div>
 </div>
 
@@ -1343,18 +1383,44 @@
     const data = snap.exists() ? snap.data() : {};
 
     // Populate fields
+    const displayName = data.displayName || user.displayName || user.email.split('@')[0];
     document.getElementById('pf-name').value = data.displayName || user.displayName || '';
     document.getElementById('pf-age').value = data.age || '';
+    document.getElementById('pf-bio') && (document.getElementById('pf-bio').value = data.bio || '');
     document.getElementById('pf-pincode').value = data.pincode || '';
-    if (data.avatarUrl) {
-      document.getElementById('profile-avatar-display').innerHTML = `<img src="${data.avatarUrl}">`;
-    } else {
-      const name = data.displayName || user.displayName || user.email;
-      document.getElementById('profile-avatar-display').textContent = name.slice(0,2).toUpperCase();
+
+    // Hero section
+    const heroName = document.getElementById('hero-name');
+    const heroEmail = document.getElementById('hero-email');
+    const heroLoc = document.getElementById('hero-location');
+    if (heroName) heroName.textContent = displayName;
+    if (heroEmail) heroEmail.textContent = user.email;
+    if (heroLoc && data.locationLabel) heroLoc.textContent = '📍 ' + data.locationLabel;
+
+    // Saved articles count
+    const statSaved = document.getElementById('stat-saved');
+    if (statSaved) statSaved.textContent = _getSaved().length;
+
+    // Member since
+    const statMember = document.getElementById('stat-member');
+    if (statMember && user.metadata && user.metadata.creationTime) {
+      const d = new Date(user.metadata.creationTime);
+      statMember.textContent = d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
     }
-    document.getElementById('profile-display-name').textContent = data.displayName || user.displayName || user.email.split('@')[0];
-    document.getElementById('profile-display-email').textContent = user.email;
-    if (data.locationLabel) document.getElementById('profile-display-location').textContent = '📍 ' + data.locationLabel;
+
+    if (data.avatarUrl) {
+      document.getElementById('profile-avatar-display').innerHTML = `<img src="${data.avatarUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+    } else {
+      document.getElementById('profile-avatar-display').textContent = displayName.slice(0,2).toUpperCase();
+    }
+
+    // Reading preferences
+    if (data.prefs) {
+      ['politics','economy','environment','international','science','society'].forEach(k => {
+        const el = document.getElementById('pref-' + k);
+        if (el) el.checked = !!data.prefs[k];
+      });
+    }
 
     if (data.locMode === 'pin') switchLocMode('pin');
   }
@@ -1367,6 +1433,7 @@
 
     const name = document.getElementById('pf-name').value.trim();
     const age = document.getElementById('pf-age').value;
+    const bio = document.getElementById('pf-bio') ? document.getElementById('pf-bio').value.trim() : '';
     const pincode = document.getElementById('pf-pincode').value.trim();
     const locMode = document.getElementById('loc-pin-section').style.display === 'none' ? 'gps' : 'pin';
 
@@ -1377,18 +1444,25 @@
       locationLabel = window._detectedLocation;
     }
 
-    const payload = { displayName: name, age: age ? parseInt(age) : null, locMode, locationLabel };
+    const prefs = {};
+    ['politics','economy','environment','international','science','society'].forEach(k => {
+      const el = document.getElementById('pref-' + k);
+      if (el) prefs[k] = el.checked;
+    });
+
+    const payload = { displayName: name, age: age ? parseInt(age) : null, bio, locMode, locationLabel, prefs };
     if (locMode === 'pin') payload.pincode = pincode;
     if (window._avatarBase64) payload.avatarUrl = window._avatarBase64;
 
     await setDoc(doc(db, 'users', user.uid), payload, { merge: true });
 
-    document.getElementById('profile-display-name').textContent = name || user.email.split('@')[0];
-    if (locationLabel) document.getElementById('profile-display-location').textContent = '📍 ' + locationLabel;
+    const heroName = document.getElementById('hero-name');
+    if (heroName) heroName.textContent = name || user.email.split('@')[0];
+    const heroLoc = document.getElementById('hero-location');
+    if (heroLoc && locationLabel) heroLoc.textContent = '📍 ' + locationLabel;
 
-    const success = document.getElementById('profile-success');
-    success.style.display = 'block';
-    setTimeout(() => success.style.display = 'none', 3000);
+    const success = document.getElementById('success-banner') || document.getElementById('profile-success');
+    if (success) { success.style.display = 'block'; setTimeout(() => success.style.display = 'none', 3000); }
 
     btn.textContent = 'Save profile'; btn.disabled = false;
     updateAllNavs(user);
