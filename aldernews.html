@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aldernews</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FBF6EC;
+    --fallen-leaf: #E8C46A;
+    --amber-bark: #C47C2B;
+    --rich-soil: #6B3D14;
+    --evergreen: #3E6B3A;
+    --night-canopy: #1C3320;
+    --pro-ruling: #C47C2B;
+    --pro-ruling-bg: #FDF3E3;
+    --pro-ruling-text: #6B3D14;
+    --pro-opposition: #3E6B3A;
+    --pro-opposition-bg: #EAF2E9;
+    --pro-opposition-text: #1C3320;
+    --text-primary: #1C1208;
+    --text-secondary: #6B5A45;
+    --text-muted: #9C8A74;
+    --border: rgba(107,61,20,0.12);
+    --border-strong: rgba(107,61,20,0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  .page { display: none; min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--night-canopy);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+    border-bottom: 2px solid var(--fallen-leaf);
+  }
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--fallen-leaf);
+    cursor: pointer; letter-spacing: -0.3px;
+  }
+  .nav-logo span { color: var(--cream); font-weight: 400; }
+  .nav-links { display: flex; gap: 4px; }
+  .nav-link {
+    padding: 6px 14px; border-radius: 6px;
+    font-size: 13px; font-weight: 500;
+    color: rgba(251,246,236,0.7);
+    cursor: pointer; border: none; background: none;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .nav-link:hover { color: var(--fallen-leaf); background: rgba(232,196,106,0.1); }
+  .nav-link.active { color: var(--fallen-leaf); background: rgba(232,196,106,0.15); }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .nav-cta {
+    padding: 7px 16px; border-radius: 6px;
+    background: var(--fallen-leaf); color: var(--night-canopy);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .nav-cta:hover { background: #f0d070; }
+
+  /* LOGIN PAGE */
+  .login-page {
+    min-height: 100vh;
+    background: var(--night-canopy);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .login-wrap {
+    display: grid; grid-template-columns: 1fr 1fr;
+    min-height: 100vh; width: 100%;
+  }
+  .login-left {
+    background: var(--night-canopy);
+    display: flex; flex-direction: column;
+    justify-content: center; padding: 4rem;
+    position: relative; overflow: hidden;
+  }
+  .login-left::before {
+    content: '';
+    position: absolute; top: -100px; left: -100px;
+    width: 500px; height: 500px; border-radius: 50%;
+    background: rgba(62,107,58,0.15);
+    pointer-events: none;
+  }
+  .login-left::after {
+    content: '';
+    position: absolute; bottom: -80px; right: -80px;
+    width: 350px; height: 350px; border-radius: 50%;
+    background: rgba(232,196,106,0.08);
+    pointer-events: none;
+  }
+  .login-brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px; font-weight: 700;
+    color: var(--fallen-leaf);
+    line-height: 1; margin-bottom: 1rem;
+  }
+  .login-brand span { display: block; font-size: 18px; color: rgba(251,246,236,0.5); font-weight: 400; font-family: 'DM Sans', sans-serif; margin-top: 8px; letter-spacing: 2px; text-transform: uppercase; }
+  .login-tagline {
+    font-family: 'Source Serif 4', serif;
+    font-size: 18px; font-style: italic;
+    color: rgba(251,246,236,0.6);
+    margin-bottom: 3rem; line-height: 1.6;
+  }
+  .login-features { list-style: none; }
+  .login-features li {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 14px; color: rgba(251,246,236,0.55);
+    padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .login-features li::before { content: '—'; color: var(--fallen-leaf); }
+
+  .login-right {
+    background: var(--cream);
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 4rem;
+  }
+  .login-card {
+    width: 100%; max-width: 380px;
+  }
+  .login-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; font-weight: 600;
+    color: var(--night-canopy);
+    margin-bottom: 6px;
+  }
+  .login-card p {
+    font-size: 14px; color: var(--text-secondary);
+    margin-bottom: 2rem; line-height: 1.5;
+  }
+  .google-btn {
+    width: 100%; padding: 14px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 10px; background: white;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    font-size: 15px; font-weight: 500; cursor: pointer;
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    margin-bottom: 1.5rem;
+  }
+  .google-btn:hover { border-color: var(--amber-bark); background: #fff9f0; }
+  .google-icon { width: 20px; height: 20px; }
+  .login-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+  .login-divider hr { flex: 1; border: none; border-top: 1px solid var(--border); }
+  .login-divider span { font-size: 12px; color: var(--text-muted); }
+  .login-input {
+    width: 100%; padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px; background: white;
+    font-size: 14px; color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    margin-bottom: 10px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .login-input:focus { border-color: var(--amber-bark); }
+  .login-submit {
+    width: 100%; padding: 13px;
+    background: var(--night-canopy); color: var(--fallen-leaf);
+    border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s; margin-top: 4px;
+  }
+  .login-submit:hover { background: var(--rich-soil); }
+  .login-footer { text-align: center; margin-top: 1.5rem; font-size: 12px; color: var(--text-muted); }
+  .login-footer a { color: var(--amber-bark); cursor: pointer; text-decoration: none; }
+
+  /* MAIN PAGES LAYOUT */
+  .main-layout { max-width: 1140px; margin: 0 auto; padding: 2.5rem 2rem; }
+
+  /* HERO STRIP */
+  .page-header { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1.5px solid var(--border); }
+  .page-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px; font-weight: 700; color: var(--night-canopy);
+    margin-bottom: 4px;
+  }
+  .page-header p { font-size: 14px; color: var(--text-secondary); }
+
+  /* TAGS */
+  .tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 500;
+    padding: 3px 9px; border-radius: 4px;
+    letter-spacing: 0.3px; text-transform: uppercase;
+  }
+  .tag-ruling { background: var(--pro-ruling-bg); color: var(--pro-ruling-text); }
+  .tag-opposition { background: var(--pro-opposition-bg); color: var(--pro-opposition-text); }
+  .tag-global { background: #EDF3FB; color: #1a3a5c; }
+  .tag-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .tag-ruling .tag-dot { background: var(--amber-bark); }
+  .tag-opposition .tag-dot { background: var(--evergreen); }
+  .tag-global .tag-dot { background: #378ADD; }
+
+  /* ARTICLE CARDS */
+  .articles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 2rem; }
+  .article-card {
+    background: white; padding: 1.5rem;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .article-card:hover { background: #fffdf7; }
+  .article-card.featured { grid-column: 1 / -1; padding: 2rem; }
+  .article-card .tag { margin-bottom: 10px; }
+  .article-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px; font-weight: 600;
+    color: var(--night-canopy); line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .article-card.featured .article-title { font-size: 24px; }
+  .article-excerpt {
+    font-size: 13px; color: var(--text-secondary);
+    line-height: 1.6; margin-bottom: 14px;
+  }
+  .article-meta {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .author-avatar {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600;
+    background: var(--pro-ruling-bg); color: var(--pro-ruling-text);
+  }
+  .author-avatar.opp { background: var(--pro-opposition-bg); color: var(--pro-opposition-text); }
+  .article-img {
+    width: 100%; height: 160px;
+    background: linear-gradient(135deg, #e8d5b0 0%, #c9a96e 100%);
+    border-radius: 8px; margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; position: relative;
+  }
+  .article-img-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px; color: rgba(107,61,20,0.4);
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .article-card.featured .article-img { height: 220px; }
+
+  /* FEED LAYOUT for articles page */
+  .feed-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+  .feed-main { }
+  .feed-sidebar { }
+  .sidebar-section { margin-bottom: 2rem; }
+  .sidebar-title {
+    font-size: 11px; font-weight: 500; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 1rem; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .feed-item {
+    padding: 1rem 0; border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-item .tag { margin-bottom: 6px; }
+  .feed-item-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px; line-height: 1.4;
+    color: var(--night-canopy); margin-bottom: 6px;
+  }
+  .feed-item-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 8px; }
+
+  /* BALANCE BAR */
+  .balance-bar {
+    display: flex; align-items: center; gap: 0;
+    border-radius: 8px; overflow: hidden;
+    height: 8px; margin-bottom: 1.5rem;
+  }
+  .balance-ruling { background: var(--amber-bark); flex: 1; }
+  .balance-opposition { background: var(--evergreen); flex: 1; }
+  .balance-label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--text-muted); margin-bottom: 6px;
+  }
+
+  /* VIDEOS PAGE */
+  .videos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 2rem; }
+  .video-card {
+    background: white; border-radius: 10px;
+    border: 1px solid var(--border);
+    overflow: hidden; cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+  }
+  .video-card:hover { transform: translateY(-2px); border-color: var(--border-strong); }
+  .video-thumb {
+    width: 100%; height: 160px;
+    background: var(--night-canopy);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .video-thumb-text { font-family: 'Playfair Display', serif; font-size: 13px; color: rgba(232,196,106,0.35); letter-spacing: 1px; }
+  .play-btn {
+    position: absolute;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(232,196,106,0.9);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .play-btn::after { content: ''; border-left: 16px solid var(--night-canopy); border-top: 9px solid transparent; border-bottom: 9px solid transparent; margin-left: 4px; }
+  .video-info { padding: 1rem; }
+  .video-info .tag { margin-bottom: 8px; }
+  .video-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px; line-height: 1.4;
+    color: var(--night-canopy); margin-bottom: 8px;
+  }
+  .video-meta { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; }
+  .video-duration {
+    background: rgba(0,0,0,0.5); color: white;
+    font-size: 11px; padding: 2px 7px; border-radius: 4px;
+    position: absolute; bottom: 8px; right: 8px;
+  }
+  .video-featured {
+    grid-column: 1 / -1;
+    display: grid; grid-template-columns: 1.5fr 1fr;
+    gap: 0;
+  }
+  .video-featured .video-thumb { height: 100%; min-height: 260px; }
+  .video-featured .video-info { padding: 1.5rem; display: flex; flex-direction: column; justify-content: center; }
+  .video-featured .video-title { font-size: 20px; margin-bottom: 12px; }
+  .video-featured .video-excerpt { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px; }
+
+  /* GLOBAL PAGE */
+  .global-regions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 2rem; }
+  .region-pill {
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 13px; cursor: pointer;
+    border: 1px solid var(--border);
+    background: white; color: var(--text-secondary);
+    transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+  }
+  .region-pill.active { background: var(--night-canopy); color: var(--fallen-leaf); border-color: var(--night-canopy); }
+  .global-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .global-card {
+    background: white; border-radius: 10px;
+    border: 1px solid var(--border); padding: 1.25rem;
+    cursor: pointer; transition: border-color 0.15s;
+  }
+  .global-card:hover { border-color: var(--border-strong); }
+  .global-card .tag { margin-bottom: 8px; }
+  .global-flag { font-size: 22px; margin-bottom: 8px; display: block; }
+  .global-country { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+  .global-title { font-family: 'Playfair Display', serif; font-size: 15px; line-height: 1.4; color: var(--night-canopy); margin-bottom: 8px; }
+  .global-excerpt { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* CREATOR SIGNUP */
+  .creator-layout { max-width: 760px; margin: 0 auto; padding: 2.5rem 2rem; }
+  .creator-hero {
+    text-align: center; padding: 3rem 2rem;
+    background: var(--night-canopy); border-radius: 16px;
+    margin-bottom: 2.5rem; position: relative; overflow: hidden;
+  }
+  .creator-hero::before {
+    content: ''; position: absolute; top: -60px; left: -60px;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: rgba(62,107,58,0.2); pointer-events: none;
+  }
+  .creator-hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px; color: var(--fallen-leaf);
+    margin-bottom: 12px; position: relative;
+  }
+  .creator-hero p { font-size: 15px; color: rgba(251,246,236,0.6); line-height: 1.6; max-width: 480px; margin: 0 auto 2rem; position: relative; }
+  .creator-perks { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; position: relative; }
+  .perk {
+    background: rgba(255,255,255,0.06); border-radius: 10px;
+    padding: 1rem; text-align: center; border: 1px solid rgba(255,255,255,0.08);
+  }
+  .perk-icon { font-size: 22px; margin-bottom: 6px; }
+  .perk p { font-size: 12px; color: rgba(251,246,236,0.55); margin: 0; line-height: 1.4; }
+  .perk strong { display: block; font-size: 13px; color: rgba(251,246,236,0.9); margin-bottom: 4px; }
+
+  .form-card {
+    background: white; border-radius: 14px;
+    border: 1px solid var(--border); padding: 2rem;
+  }
+  .form-section-title {
+    font-size: 11px; font-weight: 500; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 1.25rem; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); display: block; margin-bottom: 6px; }
+  .form-input {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px; background: var(--cream);
+    font-size: 14px; color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif; outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--amber-bark); background: white; }
+  .form-select {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px; background: var(--cream);
+    font-size: 14px; color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif; outline: none;
+    appearance: none; cursor: pointer;
+  }
+  .form-textarea {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px; background: var(--cream);
+    font-size: 14px; color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif; outline: none;
+    resize: vertical; min-height: 100px;
+    transition: border-color 0.2s;
+  }
+  .form-textarea:focus { border-color: var(--amber-bark); background: white; }
+  .form-check-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .form-check {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; border-radius: 8px;
+    border: 1.5px solid var(--border); cursor: pointer;
+    font-size: 13px; color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+  .form-check input { accent-color: var(--amber-bark); }
+  .form-check:hover { border-color: var(--amber-bark); background: #fffdf7; }
+  .submit-btn {
+    width: 100%; padding: 14px;
+    background: var(--night-canopy); color: var(--fallen-leaf);
+    border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 500;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s; margin-top: 8px;
+  }
+  .submit-btn:hover { background: var(--rich-soil); }
+  .form-note { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+
+  /* TICKER */
+  .ticker {
+    background: var(--fallen-leaf); color: var(--night-canopy);
+    padding: 7px 0; overflow: hidden;
+    font-size: 12px; font-weight: 500;
+    white-space: nowrap;
+  }
+  .ticker-inner { display: inline-block; animation: ticker 30s linear infinite; }
+  @keyframes ticker { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+
+  .section-label {
+    font-size: 11px; font-weight: 500; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="page-login" class="page active">
+  <div class="login-wrap">
+    <div class="login-left">
+      <div class="login-brand">
+        Alder<span>news</span>
+        <span>Both sides. Always.</span>
+      </div>
+      <p class="login-tagline">"Where India reads the news it didn't know it needed — and the news it was trying to avoid."</p>
+      <ul class="login-features">
+        <li>Verified student journalists from across India</li>
+        <li>Every story tagged — ruling or opposition perspective</li>
+        <li>Your feed is always 50% for, 50% against</li>
+        <li>Videos, articles, and global coverage</li>
+        <li>Zero editorial bias. Full political spectrum.</li>
+      </ul>
+    </div>
+    <div class="login-right">
+      <div class="login-card">
+        <h2>Sign in to Aldernews</h2>
+        <p>Stay informed. Stay balanced. Read both sides of every story.</p>
+        <button class="google-btn" id="google-btn">
+          <svg class="google-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          <span id="google-btn-text">Continue with Google</span>
+        </button>
+        <div class="login-divider"><hr><span>or sign in with email</span><hr></div>
+        <div id="login-error" style="display:none;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 14px;font-size:13px;color:#B91C1C;margin-bottom:10px;"></div>
+        <input class="login-input" id="login-email" type="email" placeholder="Your email address" oninput="clearLoginError()">
+        <input class="login-input" id="login-password" type="password" placeholder="Password" oninput="clearLoginError()">
+        <button class="login-submit" id="login-submit-btn">Sign in</button>
+        <div class="login-footer">
+          Don't have an account? <a onclick="goToPage('creator')">Join as a creator</a><br><br>
+          By continuing you agree to our <a>Terms</a> and <a>Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARTICLES PAGE -->
+<div id="page-articles" class="page">
+  <nav>
+    <div class="nav-logo" onclick="goToPage('articles')">Alder<span>news</span></div>
+    <div class="nav-links">
+      <button class="nav-link active" onclick="goToPage('articles')">Articles</button>
+      <button class="nav-link" onclick="goToPage('videos')">Videos</button>
+      <button class="nav-link" onclick="goToPage('global')">Global</button>
+    </div>
+    <div class="nav-right" id="nav-right-articles"></div>
+  </nav>
+  <div class="ticker">
+    <span class="ticker-inner">Breaking: Parliament session begins Monday &nbsp;•&nbsp; Supreme Court hears petition on electoral bonds &nbsp;•&nbsp; India GDP growth revised to 6.8% &nbsp;•&nbsp; Opposition walkout over farm bill amendments &nbsp;•&nbsp; Cabinet approves new education policy guidelines &nbsp;•&nbsp; PM addresses G20 preparatory summit &nbsp;•&nbsp; </span>
+  </div>
+  <div class="main-layout">
+    <div class="page-header">
+      <h1>Today's articles</h1>
+      <p>Sunday, 1 June 2026 &nbsp;·&nbsp; 248 verified stories today</p>
+    </div>
+    <div class="balance-label"><span>Pro-ruling party (50%)</span><span>Pro-opposition (50%)</span></div>
+    <div class="balance-bar"><div class="balance-ruling"></div><div class="balance-opposition"></div></div>
+    <div class="feed-layout">
+      <div class="feed-main">
+        <p class="section-label">Top stories</p>
+        <div class="articles-grid">
+          <div class="article-card featured">
+            <span class="tag tag-ruling"><span class="tag-dot"></span>Pro-ruling</span>
+            <div class="article-img"><span class="article-img-text">Parliament — New Delhi</span></div>
+            <div class="article-title">Government's infrastructure push crosses ₹12 lakh crore milestone ahead of schedule</div>
+            <div class="article-excerpt">The National Infrastructure Pipeline, launched in 2020, has seen unprecedented momentum with road, rail and port projects completing six months ahead of projected timelines in fiscal year 2025–26.</div>
+            <div class="article-meta">
+              <div class="author-avatar">RK</div>
+              <span>Rohit Kumar · IIMC Delhi</span>
+              <span>·</span><span>8 min read</span>
+            </div>
+          </div>
+          <div class="article-card">
+            <span class="tag tag-opposition"><span class="tag-dot"></span>Pro-opposition</span>
+            <div class="article-title">Opposition demands JPC probe into infrastructure contract allocation process</div>
+            <div class="article-excerpt">Leaders from seven opposition parties have jointly submitted a memorandum alleging procedural irregularities in the awarding of highway contracts worth over ₹2.3 lakh crore.</div>
+            <div class="article-meta">
+              <div class="author-avatar opp">PS</div>
+              <span>Priya Sharma · AJK Mass Comm</span>
+              <span>·</span><span>6 min read</span>
+            </div>
+          </div>
+          <div class="article-card">
+            <span class="tag tag-ruling"><span class="tag-dot"></span>Pro-ruling</span>
+            <div class="article-title">New digital public infrastructure framework wins praise at World Economic Forum</div>
+            <div class="article-excerpt">India's UPI-based export model cited as a template for developing economies, with 14 nations in active discussions to adopt the payment stack.</div>
+            <div class="article-meta">
+              <div class="author-avatar">AV</div>
+              <span>Arjun Verma · Symbiosis Pune</span>
+              <span>·</span><span>5 min read</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="section-label" style="margin-top:2rem;">Latest feed</p>
+        <div class="feed-item">
+          <span class="tag tag-opposition"><span class="tag-dot"></span>Pro-opposition</span>
+          <div class="feed-item-title">Unemployment data methodology questioned as youth joblessness figures disputed</div>
+          <div class="feed-item-meta"><span>Neha Iyer · Christ University</span><span>·</span><span>4 min read</span><span>·</span><span>2 hours ago</span></div>
+        </div>
+        <div class="feed-item">
+          <span class="tag tag-ruling"><span class="tag-dot"></span>Pro-ruling</span>
+          <div class="feed-item-title">Startup India scheme crosses 1.5 lakh registered startups, ministry confirms</div>
+          <div class="feed-item-meta"><span>Karan Mehta · Xavier's Mumbai</span><span>·</span><span>3 min read</span><span>·</span><span>4 hours ago</span></div>
+        </div>
+        <div class="feed-item">
+          <span class="tag tag-opposition"><span class="tag-dot"></span>Pro-opposition</span>
+          <div class="feed-item-title">Press freedom index ranking drops for third consecutive year, report finds</div>
+          <div class="feed-item-meta"><span>Tanya Roy · Jadavpur University</span><span>·</span><span>7 min read</span><span>·</span><span>5 hours ago</span></div>
+        </div>
+        <div class="feed-item">
+          <span class="tag tag-ruling"><span class="tag-dot"></span>Pro-ruling</span>
+          <div class="feed-item-title">India's renewable energy capacity surpasses 200 GW, beats 2030 target early</div>
+          <div class="feed-item-meta"><span>Siddharth Rao · Manipal</span><span>·</span><span>5 min read</span><span>·</span><span>7 hours ago</span></div>
+        </div>
+        <div class="feed-item">
+          <span class="tag tag-opposition"><span class="tag-dot"></span>Pro-opposition</span>
+          <div class="feed-item-title">Electoral bonds case: Opposition demands full disclosure of donor-scheme linkages</div>
+          <div class="feed-item-meta"><span>Ananya Das · Delhi University</span><span>·</span><span>9 min read</span><span>·</span><span>9 hours ago</span></div>
+        </div>
+      </div>
+      <div class="feed-sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-title">Today's balance</div>
+          <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:1rem;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
+              <span style="color:var(--pro-ruling-text);font-weight:500;">Pro-ruling 50%</span>
+              <span style="color:var(--pro-opposition-text);font-weight:500;">Pro-opposition 50%</span>
+            </div>
+            <div style="display:flex;border-radius:4px;overflow:hidden;height:10px;">
+              <div style="background:var(--amber-bark);flex:1;"></div>
+              <div style="background:var(--evergreen);flex:1;"></div>
+            </div>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.5;">Your feed is automatically balanced. Every story you see has an equal counterpart.</p>
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-title">Trending topics</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span style="font-size:12px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;">#Parliament</span>
+            <span style="font-size:12px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;">#Economy</span>
+            <span style="font-size:12px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;">#Infrastructure</span>
+            <span style="font-size:12px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;">#Elections2026</span>
+            <span style="font-size:12px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;">#PressFreedom</span>
+            <span style="font-size:12px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;">#StartupIndia</span>
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-title">Top creators this week</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="author-avatar" style="width:32px;height:32px;font-size:12px;">RK</div>
+              <div><div style="font-size:13px;font-weight:500;color:var(--night-canopy);">Rohit Kumar</div><div style="font-size:11px;color:var(--text-muted);">IIMC Delhi · 12 stories</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="author-avatar opp" style="width:32px;height:32px;font-size:12px;">PS</div>
+              <div><div style="font-size:13px;font-weight:500;color:var(--night-canopy);">Priya Sharma</div><div style="font-size:11px;color:var(--text-muted);">AJK Mass Comm · 9 stories</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="author-avatar" style="width:32px;height:32px;font-size:12px;">AV</div>
+              <div><div style="font-size:13px;font-weight:500;color:var(--night-canopy);">Arjun Verma</div><div style="font-size:11px;color:var(--text-muted);">Symbiosis Pune · 8 stories</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VIDEOS PAGE -->
+<div id="page-videos" class="page">
+  <nav>
+    <div class="nav-logo" onclick="goToPage('articles')">Alder<span>news</span></div>
+    <div class="nav-links">
+      <button class="nav-link" onclick="goToPage('articles')">Articles</button>
+      <button class="nav-link active" onclick="goToPage('videos')">Videos</button>
+      <button class="nav-link" onclick="goToPage('global')">Global</button>
+    </div>
+    <div class="nav-right" id="nav-right-videos"></div>
+  </nav>
+  <div class="ticker">
+    <span class="ticker-inner">Watch now: Parliament budget session highlights &nbsp;•&nbsp; Exclusive: Ground report from Bihar floods &nbsp;•&nbsp; Interview: Opposition leader on electoral reform &nbsp;•&nbsp; Special: India's clean energy transition &nbsp;•&nbsp;</span>
+  </div>
+  <div class="main-layout">
+    <div class="page-header">
+      <h1>Video reports</h1>
+      <p>Field-reported by verified student journalists across India</p>
+    </div>
+    <div class="balance-label"><span>Pro-ruling party (50%)</span><span>Pro-opposition (50%)</span></div>
+    <div class="balance-bar"><div class="balance-ruling"></div><div class="balance-opposition"></div></div>
+    <div class="videos-grid">
+      <div class="video-card video-featured">
+        <div class="video-thumb">
+          <span class="video-thumb-text">Parliament Session — New Delhi</span>
+          <div class="play-btn"></div>
+          <span class="video-duration">18:42</span>
+        </div>
+        <div class="video-info">
+          <span class="tag tag-ruling"><span class="tag-dot"></span>Pro-ruling</span>
+          <div class="video-title">Inside the budget session: How the government is pitching its economic record</div>
+          <div class="video-excerpt">A ground-level report from the Parliament corridors as the ruling party prepares to defend its five-year economic track record ahead of the upcoming state elections.</div>
+          <div class="video-meta"><span>Anika Joshi · IIMC</span><span>3 hours ago</span></div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-thumb">
+          <span class="video-thumb-text">Mumbai</span>
+          <div class="play-btn"></div>
+          <span class="video-duration">9:14</span>
+        </div>
+        <div class="video-info">
+          <span class="tag tag-opposition"><span class="tag-dot"></span>Pro-opposition</span>
+          <div class="video-title">Street vendors on the economic reality behind the growth numbers</div>
+          <div class="video-meta"><span>Kabir Sen · XIC Mumbai</span><span>5h ago</span></div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-thumb" style="background:#1a3020;">
+          <span class="video-thumb-text">Bihar</span>
+          <div class="play-btn"></div>
+          <span class="video-duration">12:07</span>
+        </div>
+        <div class="video-info">
+          <span class="tag tag-ruling"><span class="tag-dot"></span>Pro-ruling</span>
+          <div class="video-title">Flood relief operations: How state machinery is responding on the ground</div>
+          <div class="video-meta"><span>Sneha Gupta · Patna Univ.</span><span>6h ago</span></div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-thumb" style="background:#2a1a0a;">
+          <span class="video-thumb-text">Kolkata</span>
+          <div class="play-btn"></div>
+          <span class="video-duration">7:33</span>
+        </div>
+        <div class="video-info">
+          <span class="tag tag-opposition"><span class="tag-dot"></span>Pro-opposition</span>
+          <div class="video-title">Farmers still waiting: The promise of debt relief, one year on</div>
+          <div class="video-meta"><span>Riya Bose · Jadavpur</span><span>8h ago</span></div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-thumb" style="background:#0a1a2a;">
+          <span class="video-thumb-text">Bengaluru</span>
+          <div class="play-btn"></div>
+          <span class="video-duration">14:22</span>
+        </div>
+        <div class="video-info">
+          <span class="tag tag-ruling"><span class="tag-dot"></span>Pro-ruling</span>
+          <div class="video-title">Tech corridor expansion: Why Bengaluru is betting on India's AI moment</div>
+          <div class="video-meta"><span>Dev Nair · Manipal</span><span>10h ago</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GLOBAL PAGE -->
+<div id="page-global" class="page">
+  <nav>
+    <div class="nav-logo" onclick="goToPage('articles')">Alder<span>news</span></div>
+    <div class="nav-links">
+      <button class="nav-link" onclick="goToPage('articles')">Articles</button>
+      <button class="nav-link" onclick="goToPage('videos')">Videos</button>
+      <button class="nav-link active" onclick="goToPage('global')">Global</button>
+    </div>
+    <div class="nav-right" id="nav-right-global"></div>
+  </nav>
+  <div class="main-layout">
+    <div class="page-header">
+      <h1>Global coverage</h1>
+      <p>World news as it affects India — reported and contextualised for Indian readers</p>
+    </div>
+    <div class="global-regions">
+      <button class="region-pill active">All regions</button>
+      <button class="region-pill">South Asia</button>
+      <button class="region-pill">US & Americas</button>
+      <button class="region-pill">Europe</button>
+      <button class="region-pill">Middle East</button>
+      <button class="region-pill">East Asia</button>
+      <button class="region-pill">Africa</button>
+    </div>
+    <div class="global-grid">
+      <div class="global-card">
+        <span class="global-flag">🇺🇸</span>
+        <div class="global-country">United States</div>
+        <span class="tag tag-global"><span class="tag-dot"></span>International</span>
+        <div class="global-title">US-India trade negotiations enter final stage as tariff framework nears agreement</div>
+        <div class="global-excerpt">Commerce ministry officials confirm a three-tier tariff structure is under discussion covering tech, pharma and agricultural goods.</div>
+      </div>
+      <div class="global-card">
+        <span class="global-flag">🇵🇰</span>
+        <div class="global-country">Pakistan</div>
+        <span class="tag tag-global"><span class="tag-dot"></span>International</span>
+        <div class="global-title">Cross-border water treaty talks resume after 14-month suspension</div>
+        <div class="global-excerpt">Indus Waters Treaty renegotiation resumes in Geneva with both sides sending senior delegations for the first time since 2024.</div>
+      </div>
+      <div class="global-card">
+        <span class="global-flag">🇨🇳</span>
+        <div class="global-country">China</div>
+        <span class="tag tag-global"><span class="tag-dot"></span>International</span>
+        <div class="global-title">LAC situation: India and China complete eighth round of corps commander talks</div>
+        <div class="global-excerpt">Both sides confirm disengagement at a remaining friction point in eastern Ladakh, pending formal verification by ground patrols.</div>
+      </div>
+      <div class="global-card">
+        <span class="global-flag">🇷🇺</span>
+        <div class="global-country">Russia</div>
+        <span class="tag tag-global"><span class="tag-dot"></span>International</span>
+        <div class="global-title">India-Russia oil deal extended through 2028 as rupee-rouble mechanism stabilises</div>
+        <div class="global-excerpt">Ministry of Petroleum confirms discounted crude imports will continue under a revised pricing formula pegged to the Dubai benchmark.</div>
+      </div>
+      <div class="global-card">
+        <span class="global-flag">🇧🇩</span>
+        <div class="global-country">Bangladesh</div>
+        <span class="tag tag-global"><span class="tag-dot"></span>International</span>
+        <div class="global-title">Teesta water-sharing accord: India and Bangladesh announce joint commission</div>
+        <div class="global-excerpt">The long-pending river water agreement may finally move forward as both governments set up a technical commission with a 90-day mandate.</div>
+      </div>
+      <div class="global-card">
+        <span class="global-flag">🇬🇧</span>
+        <div class="global-country">United Kingdom</div>
+        <span class="tag tag-global"><span class="tag-dot"></span>International</span>
+        <div class="global-title">UK-India free trade agreement: Final sticking point on professional visa quotas</div>
+        <div class="global-excerpt">Sources in London say the FTA is 95% done, with only mobility provisions for Indian professionals remaining as a contested clause.</div>
+      </div>
+      <div class="global-card">
+        <span class="global-flag">🇮🇱</span>
+        <div class="global-country">Israel / West Asia</div>
+        <span class="tag tag-global"><span class="tag-dot"></span>International</span>
+        <div class="global-title">India abstains again at UN vote on West Asia ceasefire resolution</div>
+        <div class="global-excerpt">India's position of strategic neutrality remains consistent as the conflict enters its nineteenth month with no resolution in sight.</div>
+      </div>
+      <div class="global-card">
+        <span class="global-flag">🇯🇵</span>
+        <div class="global-country">Japan</div>
+        <span class="tag tag-global"><span class="tag-dot"></span>International</span>
+        <div class="global-title">Bullet train project reaches 40% completion milestone in Maharashtra corridor</div>
+        <div class="global-excerpt">The Mumbai-Ahmedabad high-speed rail project, built with Japanese Shinkansen technology, hits its mid-project target two months early.</div>
+      </div>
+      <div class="global-card">
+        <span class="global-flag">🇺🇳</span>
+        <div class="global-country">United Nations</div>
+        <span class="tag tag-global"><span class="tag-dot"></span>International</span>
+        <div class="global-title">India's UNSC permanent seat bid gains momentum as G4 nations coordinate push</div>
+        <div class="global-excerpt">Brazil, Germany, Japan and India intensify diplomatic efforts ahead of a critical UN General Assembly debate on Security Council reform.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CREATOR SIGNUP PAGE -->
+<div id="page-creator" class="page">
+  <nav>
+    <div class="nav-logo" onclick="goToPage('articles')">Alder<span>news</span></div>
+    <div class="nav-links">
+      <button class="nav-link" onclick="goToPage('articles')">Articles</button>
+      <button class="nav-link" onclick="goToPage('videos')">Videos</button>
+      <button class="nav-link" onclick="goToPage('global')">Global</button>
+    </div>
+    <div class="nav-right">
+      <button class="nav-cta" onclick="goToPage('login')">Sign in</button>
+    </div>
+  </nav>
+  <div class="creator-layout">
+    <div class="creator-hero">
+      <h1>Join as a creator</h1>
+      <p>Aldernews is built by students studying journalism, mass media, and anchoring. If that's you — this is your platform.</p>
+      <div class="creator-perks">
+        <div class="perk">
+          <div class="perk-icon">✍️</div>
+          <strong>Publish freely</strong>
+          <p>Articles and video reports, reviewed and live within 48 hours</p>
+        </div>
+        <div class="perk">
+          <div class="perk-icon">🏅</div>
+          <strong>Verified badge</strong>
+          <p>Get a verified creator badge after your first approved story</p>
+        </div>
+        <div class="perk">
+          <div class="perk-icon">📈</div>
+          <strong>Real reach</strong>
+          <p>Your stories go to thousands of politically aware Indian readers</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-section-title">Personal details</div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">First name</label>
+          <input class="form-input" type="text" placeholder="Arjun">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Last name</label>
+          <input class="form-input" type="text" placeholder="Verma">
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">Email address</label>
+        <input class="form-input" type="email" placeholder="you@college.edu.in">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone number</label>
+        <input class="form-input" type="tel" placeholder="+91 98765 43210">
+      </div>
+
+      <div class="form-section-title" style="margin-top:1.5rem;">Academic details</div>
+      <div class="form-group">
+        <label class="form-label">College / university name</label>
+        <input class="form-input" type="text" placeholder="e.g. IIMC New Delhi, Symbiosis Pune">
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Course / programme</label>
+          <select class="form-select">
+            <option value="">Select your course</option>
+            <option>BA Mass Communication</option>
+            <option>PG Diploma in Journalism</option>
+            <option>MA Journalism</option>
+            <option>BA Anchoring & Presentation</option>
+            <option>BJ / BJMc</option>
+            <option>Other media / comm programme</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Year of study</label>
+          <select class="form-select">
+            <option value="">Select year</option>
+            <option>1st year</option>
+            <option>2nd year</option>
+            <option>3rd year</option>
+            <option>Final year</option>
+            <option>Postgraduate</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">Student ID / enrollment number</label>
+        <input class="form-input" type="text" placeholder="For verification — kept private">
+      </div>
+
+      <div class="form-section-title" style="margin-top:1.5rem;">Content details</div>
+      <div class="form-group">
+        <label class="form-label">What type of content will you create?</label>
+        <div class="form-check-group">
+          <label class="form-check"><input type="checkbox"> Written articles</label>
+          <label class="form-check"><input type="checkbox"> Video reports</label>
+          <label class="form-check"><input type="checkbox"> On-camera anchoring</label>
+          <label class="form-check"><input type="checkbox"> Investigative features</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beats / topics you want to cover</label>
+        <div class="form-check-group">
+          <label class="form-check"><input type="checkbox"> Politics & governance</label>
+          <label class="form-check"><input type="checkbox"> Economy & business</label>
+          <label class="form-check"><input type="checkbox"> Environment</label>
+          <label class="form-check"><input type="checkbox"> International affairs</label>
+          <label class="form-check"><input type="checkbox"> Science & technology</label>
+          <label class="form-check"><input type="checkbox"> Society & culture</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tell us why you want to join Aldernews</label>
+        <textarea class="form-textarea" placeholder="What draws you to balanced journalism? Any stories you're itching to cover?"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Link to any previous work (optional)</label>
+        <input class="form-input" type="url" placeholder="YouTube, blog, college magazine, portfolio...">
+      </div>
+
+      <button class="submit-btn">Submit application →</button>
+      <p class="form-note">Applications are reviewed within 3–5 working days. You'll receive an email once verified.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signOut,
+    signInWithPopup, GoogleAuthProvider,
+    signInWithEmailAndPassword, createUserWithEmailAndPassword
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA5hUL49V6C9fN1cQ16oBxObw2XGtiLz7o",
+    authDomain: "aldernews-8a170.firebaseapp.com",
+    projectId: "aldernews-8a170",
+    storageBucket: "aldernews-8a170.firebasestorage.app",
+    messagingSenderId: "540643966857",
+    appId: "1:540643966857:web:5328d9db1d6d22c9e46b58",
+    measurementId: "G-G9NPZG3DFC"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const googleProvider = new GoogleAuthProvider();
+
+  // ── Auth state listener ──────────────────────────────────────
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      updateAllNavs(user);
+      // If on login page, redirect to articles
+      const loginPage = document.getElementById('page-login');
+      if (loginPage.classList.contains('active')) goToPage('articles');
+    } else {
+      updateAllNavs(null);
+    }
+  });
+
+  // ── Nav rendering ────────────────────────────────────────────
+  function updateAllNavs(user) {
+    ['nav-right-articles', 'nav-right-videos', 'nav-right-global'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (user) {
+        const name = user.displayName || user.email.split('@')[0];
+        const initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+        el.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="nav-link" onclick="goToPage('creator')" style="color:rgba(251,246,236,0.7);">Become a creator</button>
+            <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="window._toggleUserMenu()">
+              <div style="width:32px;height:32px;border-radius:50%;background:var(--fallen-leaf);color:var(--night-canopy);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">${initials}</div>
+              <span style="font-size:13px;color:rgba(251,246,236,0.8);">${name.split(' ')[0]}</span>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="opacity:0.5"><path d="M2 4l4 4 4-4" stroke="#FBF6EC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>`;
+      } else {
+        el.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button class="nav-link" onclick="goToPage('creator')" style="color:rgba(251,246,236,0.7);">Become a creator</button>
+            <button class="nav-cta" onclick="goToPage('login')">Sign in</button>
+          </div>`;
+      }
+    });
+  }
+
+  // ── User dropdown ────────────────────────────────────────────
+  let menuOpen = false;
+  window._toggleUserMenu = function() {
+    if (menuOpen) { closeMenu(); return; }
+    menuOpen = true;
+    const user = auth.currentUser;
+    const name = user.displayName || user.email.split('@')[0];
+    const menu = document.createElement('div');
+    menu.id = 'user-dropdown';
+    menu.style.cssText = 'position:fixed;top:56px;right:20px;z-index:200;background:white;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:180px;overflow:hidden;';
+    menu.innerHTML = `
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+        <div style="font-size:13px;font-weight:500;color:var(--night-canopy);">${name}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${user.email}</div>
+      </div>
+      <div style="padding:6px 0;">
+        <div style="padding:9px 16px;font-size:13px;color:var(--text-secondary);cursor:pointer;" onmouseover="this.style.background='#fffdf7'" onmouseout="this.style.background=''">My profile</div>
+        <div style="padding:9px 16px;font-size:13px;color:var(--text-secondary);cursor:pointer;" onmouseover="this.style.background='#fffdf7'" onmouseout="this.style.background=''">Saved articles</div>
+        <div onclick="window._signOut()" style="padding:9px 16px;font-size:13px;color:#B91C1C;cursor:pointer;border-top:1px solid var(--border);margin-top:6px;" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background=''">Sign out</div>
+      </div>`;
+    document.body.appendChild(menu);
+    setTimeout(() => document.addEventListener('click', outsideClick), 10);
+  };
+
+  function outsideClick(e) {
+    const menu = document.getElementById('user-dropdown');
+    if (menu && !menu.contains(e.target)) closeMenu();
+  }
+  function closeMenu() {
+    menuOpen = false;
+    document.getElementById('user-dropdown')?.remove();
+    document.removeEventListener('click', outsideClick);
+  }
+
+  window._signOut = async function() {
+    closeMenu();
+    await signOut(auth);
+    goToPage('login');
+  };
+
+  // ── Google Sign-In ───────────────────────────────────────────
+  window.handleGoogleLogin = async function() {
+    const btn = document.getElementById('google-btn');
+    const btnText = document.getElementById('google-btn-text');
+    btn.disabled = true;
+    btnText.textContent = 'Connecting…';
+    btn.style.opacity = '0.75';
+    try {
+      await signInWithPopup(auth, googleProvider);
+      // onAuthStateChanged handles the redirect
+    } catch (err) {
+      showLoginError(friendlyError(err.code));
+    } finally {
+      btn.disabled = false;
+      btnText.textContent = 'Continue with Google';
+      btn.style.opacity = '';
+    }
+  };
+
+  // ── Email Sign-In ────────────────────────────────────────────
+  window.handleEmailLogin = async function() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn = document.getElementById('login-submit-btn');
+
+    if (!email) { showLoginError('Please enter your email address.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showLoginError('Please enter a valid email address.'); return; }
+    if (!password) { showLoginError('Please enter your password.'); return; }
+    if (password.length < 6) { showLoginError('Password must be at least 6 characters.'); return; }
+
+    btn.textContent = 'Signing in…';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+
+    try {
+      // Try sign in first; if no account, create one
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (e) {
+        if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
+          await createUserWithEmailAndPassword(auth, email, password);
+        } else {
+          throw e;
+        }
+      }
+      // onAuthStateChanged handles the redirect
+    } catch (err) {
+      showLoginError(friendlyError(err.code));
+    } finally {
+      btn.textContent = 'Sign in';
+      btn.disabled = false;
+      btn.style.opacity = '';
+    }
+  };
+
+  // ── Error messages ───────────────────────────────────────────
+  function friendlyError(code) {
+    const map = {
+      'auth/wrong-password': 'Incorrect password. Please try again.',
+      'auth/invalid-credential': 'Incorrect email or password.',
+      'auth/user-not-found': 'No account found with that email.',
+      'auth/email-already-in-use': 'An account with this email already exists.',
+      'auth/too-many-requests': 'Too many attempts. Please wait a moment and try again.',
+      'auth/network-request-failed': 'Network error. Check your connection.',
+      'auth/popup-closed-by-user': 'Sign-in cancelled.',
+      'auth/popup-blocked': 'Pop-up was blocked by your browser. Please allow pop-ups for this site.',
+    };
+    return map[code] || 'Something went wrong. Please try again.';
+  }
+
+  // ── Region pills ─────────────────────────────────────────────
+  document.querySelectorAll('.region-pill').forEach(pill => {
+    pill.addEventListener('click', function() {
+      document.querySelectorAll('.region-pill').forEach(p => p.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // ── Button listeners ─────────────────────────────────────────
+  document.getElementById('google-btn').addEventListener('click', window.handleGoogleLogin);
+  document.getElementById('login-submit-btn').addEventListener('click', window.handleEmailLogin);
+  document.getElementById('login-password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.handleEmailLogin();
+  });
+</script>
+
+<script>
+  // Non-module globals (goToPage, showLoginError, clearLoginError)
+  function goToPage(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function showLoginError(msg) {
+    const el = document.getElementById('login-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+    const card = el.closest('.login-card');
+    card.style.animation = 'shake 0.35s ease';
+    card.addEventListener('animationend', () => card.style.animation = '', { once: true });
+  }
+
+  function clearLoginError() {
+    document.getElementById('login-error').style.display = 'none';
+  }
+</script>
+
+<style>
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+</style>
+</body>
+</html>
