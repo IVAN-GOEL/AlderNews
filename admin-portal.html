@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aldernews — Admin Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<style>
+/* ═══════════════════════════
+   TOKENS — matches Aldernews
+═══════════════════════════ */
+:root{
+  --cream:#FBF6EC; --leaf:#E8C46A; --amber:#C47C2B;
+  --soil:#6B3D14;  --bark:#3D2B1F; --green:#3E6B3A;
+  --canopy:#1C3320;--muted:#9C8A74;--paper:#F4ECD8;
+  --shadow:rgba(28,20,8,.12);
+  --red:#c0392b; --red-bg:#fff0f0; --red-border:#ffcccc;
+  --approve:#2ecc71; --approve-bg:#eafaf1; --approve-border:#a9dfbf;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--bark);min-height:100vh}
+
+/* ═══════════════════════════
+   AUTH LOADING
+═══════════════════════════ */
+#auth-loading{
+  position:fixed;inset:0;background:var(--canopy);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:9999;transition:opacity .4s;
+}
+#auth-loading.hidden{opacity:0;pointer-events:none}
+.al-logo{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;color:var(--leaf);margin-bottom:4px}
+.al-logo span{color:var(--amber)}
+.al-tagline{color:rgba(255,255,255,.35);font-size:13px;font-style:italic;font-family:'Playfair Display',serif;margin-bottom:8px}
+.al-admin-pill{background:rgba(232,196,106,.12);border:1px solid rgba(232,196,106,.2);color:var(--leaf);font-size:10px;font-weight:700;letter-spacing:.1em;padding:3px 12px;border-radius:99px;text-transform:uppercase;margin-bottom:28px}
+.al-spinner{width:28px;height:28px;border:3px solid rgba(232,196,106,.2);border-top-color:var(--leaf);border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══════════════════════════
+   SCREENS
+═══════════════════════════ */
+.screen{display:none}
+.screen.active{display:block}
+
+/* ═══════════════════════════
+   LOGIN SCREEN
+═══════════════════════════ */
+#screen-login{min-height:100vh;display:none}
+#screen-login.active{display:flex}
+
+.login-left{
+  flex:1.1;background:var(--canopy);
+  padding:60px 64px;display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;overflow:hidden;
+}
+.login-left::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 15% 85%,rgba(196,124,43,.2),transparent 55%),
+             radial-gradient(ellipse at 85% 15%,rgba(62,107,58,.15),transparent 50%);
+}
+.login-left::after{
+  content:'';position:absolute;bottom:-80px;right:-80px;
+  width:320px;height:320px;border-radius:50%;
+  border:40px solid rgba(232,196,106,.05);
+}
+.ll-top{position:relative;z-index:1}
+.ll-logo{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;color:var(--leaf);letter-spacing:.04em;margin-bottom:4px}
+.ll-logo span{color:var(--amber)}
+.ll-admin-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(232,196,106,.1);border:1px solid rgba(232,196,106,.2);color:var(--leaf);font-size:10.5px;font-weight:700;letter-spacing:.09em;padding:4px 12px;border-radius:99px;text-transform:uppercase;margin-top:10px}
+.ll-mid{position:relative;z-index:1;padding:48px 0}
+.ll-headline{font-family:'Playfair Display',serif;font-size:38px;font-weight:900;color:white;line-height:1.2;margin-bottom:18px}
+.ll-headline em{color:var(--leaf);font-style:normal}
+.ll-body{color:rgba(255,255,255,.45);font-size:14px;line-height:1.7;max-width:380px}
+.ll-capabilities{margin-top:30px;display:flex;flex-direction:column;gap:13px}
+.ll-cap{display:flex;align-items:center;gap:12px}
+.cap-dot{width:6px;height:6px;border-radius:50%;background:var(--leaf);flex-shrink:0}
+.cap-text{font-size:13px;color:rgba(255,255,255,.55)}
+.ll-bottom{position:relative;z-index:1;color:rgba(255,255,255,.2);font-size:11.5px}
+
+.login-right{
+  flex:0.9;background:var(--cream);
+  display:flex;align-items:center;justify-content:center;padding:60px 48px;
+}
+.login-form-wrap{width:100%;max-width:360px}
+.login-form-wrap h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--canopy);margin-bottom:6px}
+.login-form-wrap .sub{color:var(--muted);font-size:13.5px;margin-bottom:28px}
+
+.form-field{margin-bottom:14px}
+.form-field label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px}
+.form-field input{
+  width:100%;padding:11px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:9px;
+  font-size:14px;font-family:'DM Sans',sans-serif;color:var(--bark);background:white;
+  outline:none;transition:border-color .2s;
+}
+.form-field input:focus{border-color:var(--amber)}
+.login-submit{
+  width:100%;padding:13px;background:var(--canopy);color:var(--leaf);
+  font-size:14.5px;font-weight:700;border:none;border-radius:10px;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;letter-spacing:.02em;
+}
+.login-submit:hover{background:var(--soil)}
+.login-submit:disabled{opacity:.5;cursor:not-allowed}
+.login-error{
+  background:var(--red-bg);border:1.5px solid var(--red-border);border-radius:8px;
+  padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:16px;display:none;
+}
+.back-link{text-align:center;margin-top:18px;font-size:13px;color:var(--muted)}
+.back-link a{color:var(--amber);font-weight:600;text-decoration:none}
+
+/* ═══════════════════════════
+   MAIN ADMIN SHELL
+═══════════════════════════ */
+#screen-admin{display:none;min-height:100vh}
+#screen-admin.active{display:flex}
+
+/* SIDEBAR */
+.sidebar{
+  width:240px;flex-shrink:0;background:var(--canopy);
+  display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;
+  border-right:1px solid rgba(255,255,255,.05);
+}
+.sb-logo{padding:24px 24px 20px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sb-logo-text{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--leaf);letter-spacing:.03em}
+.sb-logo-text span{color:var(--amber)}
+.sb-badge{display:inline-block;background:rgba(232,196,106,.1);border:1px solid rgba(232,196,106,.18);color:var(--leaf);font-size:9px;font-weight:700;letter-spacing:.1em;padding:2px 8px;border-radius:99px;text-transform:uppercase;margin-top:5px}
+.sb-nav{padding:16px 12px;flex:1}
+.sb-section-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.1em;padding:0 12px;margin:14px 0 6px}
+.sb-link{
+  display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;
+  color:rgba(255,255,255,.55);font-size:13.5px;font-weight:500;cursor:pointer;
+  border:none;background:none;font-family:'DM Sans',sans-serif;width:100%;text-align:left;
+  transition:all .2s;margin-bottom:2px;
+}
+.sb-link:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.06)}
+.sb-link.active{color:var(--leaf);background:rgba(232,196,106,.1)}
+.sb-link-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.sb-link-count{margin-left:auto;background:var(--amber);color:white;font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;min-width:20px;text-align:center}
+.sb-link-count.zero{background:rgba(255,255,255,.12);color:rgba(255,255,255,.35)}
+.sb-bottom{padding:16px 12px;border-top:1px solid rgba(255,255,255,.07)}
+.sb-user{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:8px}
+.sb-user-av{width:32px;height:32px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0}
+.sb-user-info{flex:1;min-width:0}
+.sb-user-name{font-size:13px;font-weight:600;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-user-role{font-size:11px;color:rgba(255,255,255,.35)}
+.sb-logout{width:100%;padding:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.5);font-size:12.5px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.sb-logout:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.8)}
+
+/* MAIN CONTENT */
+.main-content{margin-left:240px;flex:1;min-height:100vh}
+
+/* TOPBAR */
+.topbar{
+  background:white;border-bottom:1px solid rgba(0,0,0,.08);
+  padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:40;
+}
+.topbar-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--canopy)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-stat{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.topbar-stat strong{color:var(--bark);font-weight:600}
+.topbar-divider{width:1px;height:20px;background:rgba(0,0,0,.1)}
+.refresh-btn{
+  display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;
+  background:var(--paper);border:1.5px solid rgba(0,0,0,.08);
+  color:var(--muted);font-size:12.5px;font-weight:500;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.refresh-btn:hover{border-color:var(--amber);color:var(--amber)}
+
+/* PAGES */
+.admin-page{display:none;padding:28px 32px 60px}
+.admin-page.active{display:block}
+
+/* STAT CARDS ROW */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:white;border-radius:12px;padding:20px;box-shadow:0 2px 10px var(--shadow);position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;bottom:-16px;right:-16px;width:80px;height:80px;border-radius:50%;opacity:.06}
+.stat-card.pending::after{background:var(--amber)}
+.stat-card.approved::after{background:var(--approve)}
+.stat-card.rejected::after{background:var(--red)}
+.stat-card.total::after{background:var(--canopy)}
+.stat-val{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;line-height:1}
+.stat-card.pending .stat-val{color:var(--amber)}
+.stat-card.approved .stat-val{color:var(--green)}
+.stat-card.rejected .stat-val{color:var(--red)}
+.stat-card.total .stat-val{color:var(--canopy)}
+.stat-label{font-size:12px;color:var(--muted);margin-top:6px;font-weight:500}
+.stat-icon{position:absolute;top:18px;right:20px;font-size:22px;opacity:.4}
+
+/* FILTER BAR */
+.filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.filter-pill{
+  padding:7px 16px;border-radius:99px;border:1.5px solid rgba(0,0,0,.1);
+  background:white;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .2s;display:flex;align-items:center;gap:6px;
+}
+.filter-pill:hover{border-color:var(--amber);color:var(--amber)}
+.filter-pill.active{background:var(--canopy);border-color:var(--canopy);color:var(--leaf)}
+.filter-pill .fp-count{font-size:10px;font-weight:700;opacity:.7}
+.filter-spacer{flex:1}
+.search-wrap{position:relative}
+.search-wrap input{
+  padding:8px 14px 8px 36px;border:1.5px solid rgba(0,0,0,.1);border-radius:8px;
+  font-size:13.5px;font-family:'DM Sans',sans-serif;color:var(--bark);background:white;
+  outline:none;width:240px;transition:border-color .2s;
+}
+.search-wrap input:focus{border-color:var(--amber)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+
+/* APPLICATIONS TABLE */
+.apps-table{background:white;border-radius:14px;box-shadow:0 2px 12px var(--shadow);overflow:hidden}
+.apps-table-header{
+  display:grid;grid-template-columns:2fr 1.6fr 1.2fr 1fr 1fr 140px;
+  padding:12px 20px;background:var(--paper);border-bottom:1px solid rgba(0,0,0,.08);
+  font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;
+}
+.app-row{
+  display:grid;grid-template-columns:2fr 1.6fr 1.2fr 1fr 1fr 140px;
+  padding:16px 20px;border-bottom:1px solid rgba(0,0,0,.05);align-items:center;
+  transition:background .15s;cursor:pointer;
+}
+.app-row:last-child{border-bottom:none}
+.app-row:hover{background:rgba(0,0,0,.02)}
+.app-name{font-weight:600;font-size:13.5px;color:var(--bark)}
+.app-email{font-size:12px;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace}
+.app-uni{font-size:13px;color:var(--soil)}
+.app-beat{font-size:12px;color:var(--muted)}
+.app-date{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
+.status-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;
+  letter-spacing:.03em;
+}
+.status-pill.pending{background:#FFF8E8;color:var(--amber);border:1px solid rgba(196,124,43,.25)}
+.status-pill.approved{background:var(--approve-bg);color:var(--green);border:1px solid rgba(46,204,113,.25)}
+.status-pill.rejected{background:var(--red-bg);color:var(--red);border:1px solid rgba(192,57,43,.2)}
+.status-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+
+.action-btns{display:flex;gap:6px}
+.btn-approve{
+  padding:6px 12px;border-radius:7px;border:none;
+  background:var(--approve-bg);color:var(--green);
+  font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+  border:1.5px solid var(--approve-border);
+}
+.btn-approve:hover{background:var(--approve);color:white;border-color:var(--approve)}
+.btn-reject{
+  padding:6px 12px;border-radius:7px;border:none;
+  background:var(--red-bg);color:var(--red);
+  font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+  border:1.5px solid var(--red-border);
+}
+.btn-reject:hover{background:var(--red);color:white;border-color:var(--red)}
+.btn-view{
+  padding:6px 10px;border-radius:7px;
+  background:var(--paper);color:var(--muted);
+  font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+  border:1.5px solid rgba(0,0,0,.1);
+}
+.btn-view:hover{border-color:var(--amber);color:var(--amber)}
+
+/* EMPTY STATE */
+.empty-state{
+  padding:60px 20px;text-align:center;
+}
+.empty-icon{font-size:42px;margin-bottom:14px;opacity:.5}
+.empty-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--canopy);margin-bottom:6px}
+.empty-sub{font-size:13.5px;color:var(--muted)}
+
+/* LOADING ROWS */
+.loading-row{
+  padding:20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(0,0,0,.05);
+}
+.skel{background:linear-gradient(90deg,var(--paper) 25%,#ede6d5 50%,var(--paper) 75%);background-size:200%;animation:shimmer 1.4s infinite}
+@keyframes shimmer{to{background-position:-200%}}
+.skel-line{height:12px;border-radius:6px}
+.skel-av{width:36px;height:36px;border-radius:50%;flex-shrink:0}
+
+/* ═══════════════════════════
+   DETAIL MODAL
+═══════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);
+  backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .22s;
+}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{
+  background:var(--cream);border-radius:18px;width:580px;max-width:95vw;max-height:90vh;
+  overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.3);
+  transform:translateY(20px);transition:transform .28s;
+}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-header{
+  padding:24px 28px 20px;border-bottom:1px solid rgba(0,0,0,.08);
+  display:flex;align-items:flex-start;justify-content:space-between;
+}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--canopy)}
+.modal-close{
+  width:32px;height:32px;border-radius:8px;border:none;background:var(--paper);
+  color:var(--muted);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;
+}
+.modal-close:hover{background:rgba(0,0,0,.1);color:var(--bark)}
+.modal-body{padding:24px 28px}
+.modal-section{margin-bottom:22px}
+.modal-section h4{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--paper)}
+.modal-row{display:flex;gap:10px;margin-bottom:8px;font-size:13.5px}
+.modal-row-label{color:var(--muted);min-width:110px;font-weight:500;flex-shrink:0}
+.modal-row-val{color:var(--bark);font-weight:500;flex:1}
+.modal-essay{
+  background:white;border-radius:10px;padding:16px;font-size:13.5px;color:var(--bark);
+  line-height:1.7;border:1px solid rgba(0,0,0,.07);font-style:italic;
+}
+.modal-footer{
+  padding:18px 28px 24px;border-top:1px solid rgba(0,0,0,.08);
+  display:flex;gap:10px;justify-content:flex-end;
+}
+.modal-btn-approve{
+  padding:11px 22px;border-radius:10px;border:none;
+  background:var(--approve);color:white;
+  font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.modal-btn-approve:hover{background:#27ae60;transform:translateY(-1px)}
+.modal-btn-approve:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.modal-btn-reject{
+  padding:11px 22px;border-radius:10px;
+  background:var(--red-bg);color:var(--red);
+  font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+  border:1.5px solid var(--red-border);
+}
+.modal-btn-reject:hover{background:var(--red);color:white;transform:translateY(-1px)}
+.modal-btn-reject:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.modal-btn-close{
+  padding:11px 18px;border-radius:10px;
+  background:var(--paper);color:var(--muted);
+  font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+  border:1.5px solid rgba(0,0,0,.1);
+}
+.modal-btn-close:hover{border-color:var(--muted);color:var(--bark)}
+.modal-status-row{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:8px}
+.modal-status-row.approved-banner{background:var(--approve-bg);color:var(--green);border:1px solid var(--approve-border)}
+.modal-status-row.rejected-banner{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+
+/* REJECT MODAL */
+#reject-modal .modal{width:480px}
+.reject-reason-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:8px}
+.reject-reason-select{
+  width:100%;padding:11px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:9px;
+  font-size:14px;font-family:'DM Sans',sans-serif;color:var(--bark);background:white;
+  outline:none;margin-bottom:14px;transition:border-color .2s;
+  appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239C8A74' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;
+}
+.reject-reason-select:focus{border-color:var(--amber)}
+.reject-note{
+  width:100%;padding:11px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:9px;
+  font-size:13.5px;font-family:'DM Sans',sans-serif;color:var(--bark);background:white;
+  outline:none;resize:vertical;min-height:90px;line-height:1.5;transition:border-color .2s;
+}
+.reject-note:focus{border-color:var(--amber)}
+
+/* SETTINGS PAGE */
+.settings-card{background:white;border-radius:14px;padding:26px;box-shadow:0 2px 12px var(--shadow);margin-bottom:20px}
+.settings-card h3{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--canopy);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--paper)}
+.settings-field{margin-bottom:14px}
+.settings-field label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px}
+.settings-field input,.settings-field textarea{
+  width:100%;padding:10px 13px;border:1.5px solid rgba(0,0,0,.1);border-radius:9px;
+  font-size:13.5px;font-family:'DM Sans',sans-serif;color:var(--bark);background:var(--cream);
+  outline:none;transition:border-color .2s;
+}
+.settings-field input:focus,.settings-field textarea:focus{border-color:var(--amber);background:white}
+.settings-field textarea{resize:vertical;min-height:100px;line-height:1.6}
+.settings-hint{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+.settings-save{
+  padding:10px 22px;border-radius:9px;background:var(--canopy);color:var(--leaf);
+  font-size:13.5px;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.settings-save:hover{background:var(--soil)}
+.template-preview{
+  background:var(--paper);border-radius:8px;padding:14px;font-size:12.5px;color:var(--bark);
+  line-height:1.6;margin-top:10px;border-left:3px solid var(--amber);
+}
+.template-preview strong{color:var(--soil)}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--paper)}
+.settings-row:last-child{border-bottom:none}
+.settings-row-label{font-size:13.5px;color:var(--bark);font-weight:500}
+.settings-row-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.toggle{width:44px;height:24px;background:#ddd;border-radius:99px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:white;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(20px)}
+
+/* ACTIVITY LOG */
+.activity-list{display:flex;flex-direction:column;gap:10px}
+.activity-item{display:flex;align-items:flex-start;gap:14px;background:white;border-radius:10px;padding:14px 16px;box-shadow:0 1px 6px var(--shadow)}
+.activity-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.activity-dot.approved{background:var(--approve)}
+.activity-dot.rejected{background:var(--red)}
+.activity-dot.login{background:var(--amber)}
+.activity-body{flex:1}
+.activity-text{font-size:13.5px;color:var(--bark)}
+.activity-time{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:28px;right:28px;z-index:9000;
+  background:var(--canopy);color:var(--leaf);
+  font-size:13px;font-weight:500;
+  padding:12px 18px;border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,.3);
+  display:flex;align-items:center;gap:8px;
+  transform:translateY(80px);opacity:0;
+  transition:all .35s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;max-width:320px;
+}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.error{background:var(--red)}
+
+/* RESPONSIVE ADJUSTMENTS */
+@media(max-width:900px){
+  .apps-table-header{grid-template-columns:2fr 1.4fr 1fr 100px}
+  .apps-table-header .th-beat,.apps-table-header .th-date,
+  .app-row .app-beat,.app-row .app-date-cell{display:none}
+  .app-row{grid-template-columns:2fr 1.4fr 1fr 100px}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH LOADING -->
+<div id="auth-loading">
+  <div class="al-logo">Alder<span>news</span></div>
+  <div class="al-tagline">Both sides. Always.</div>
+  <div class="al-admin-pill">Admin Portal</div>
+  <div class="al-spinner"></div>
+</div>
+
+<!-- ═══════════════════════════════════
+     LOGIN SCREEN
+═══════════════════════════════════ -->
+<div class="screen" id="screen-login">
+  <div class="login-left">
+    <div class="ll-top">
+      <div class="ll-logo">Alder<span>news</span></div>
+      <div class="ll-admin-badge">⚙️ Admin Portal</div>
+    </div>
+    <div class="ll-mid">
+      <h2 class="ll-headline">Editorial<br><em>Command Centre.</em></h2>
+      <p class="ll-body">Review creator applications, approve or reject access, and manage the student journalist network — all in one place.</p>
+      <div class="ll-capabilities">
+        <div class="ll-cap"><div class="cap-dot"></div><span class="cap-text">Review pending creator applications</span></div>
+        <div class="ll-cap"><div class="cap-dot"></div><span class="cap-text">Approve or reject with automated email notifications</span></div>
+        <div class="ll-cap"><div class="cap-dot"></div><span class="cap-text">Manage approved creators and revoke access</span></div>
+        <div class="ll-cap"><div class="cap-dot"></div><span class="cap-text">Customise email templates for all decisions</span></div>
+      </div>
+    </div>
+    <div class="ll-bottom">© 2026 Aldernews · Editorial Administration</div>
+  </div>
+  <div class="login-right">
+    <div class="login-form-wrap">
+      <h2>Admin Sign In</h2>
+      <p class="sub">Access restricted to Aldernews editorial staff</p>
+      <div class="login-error" id="login-error"></div>
+      <div class="form-field">
+        <label>Admin ID</label>
+        <input type="text" id="admin-email" placeholder="Enter admin ID" oninput="clearLoginError()" autocomplete="off">
+      </div>
+      <div class="form-field">
+        <label>Password</label>
+        <input type="password" id="admin-pass" placeholder="••••••••" oninput="clearLoginError()" onkeydown="if(event.key==='Enter')doAdminLogin()">
+      </div>
+      <button class="login-submit" id="login-btn" onclick="doAdminLogin()">Sign In to Admin →</button>
+      <div class="back-link">Not an admin? <a href="index.html">← Back to Aldernews</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     ADMIN SHELL
+═══════════════════════════════════ -->
+<div class="screen" id="screen-admin">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-text">Alder<span>news</span></div>
+      <div class="sb-badge">Admin</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section-label">Applications</div>
+      <button class="sb-link active" onclick="showPage('pending',this)">
+        <span class="sb-link-icon">📋</span> Pending Review
+        <span class="sb-link-count" id="sb-count-pending">0</span>
+      </button>
+      <button class="sb-link" onclick="showPage('approved',this)">
+        <span class="sb-link-icon">✅</span> Approved
+        <span class="sb-link-count zero" id="sb-count-approved">0</span>
+      </button>
+      <button class="sb-link" onclick="showPage('rejected',this)">
+        <span class="sb-link-icon">❌</span> Rejected
+        <span class="sb-link-count zero" id="sb-count-rejected">0</span>
+      </button>
+      <button class="sb-link" onclick="showPage('all',this)">
+        <span class="sb-link-icon">📂</span> All Applications
+        <span class="sb-link-count zero" id="sb-count-all">0</span>
+      </button>
+      <div class="sb-section-label">System</div>
+      <button class="sb-link" onclick="showPage('settings',this)">
+        <span class="sb-link-icon">⚙️</span> Email Templates
+      </button>
+      <button class="sb-link" onclick="showPage('activity',this)">
+        <span class="sb-link-icon">📜</span> Activity Log
+      </button>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-user">
+        <div class="sb-user-av" id="sb-av">A</div>
+        <div class="sb-user-info">
+          <div class="sb-user-name" id="sb-name">Admin</div>
+          <div class="sb-user-role">Editorial Administrator</div>
+        </div>
+      </div>
+      <button class="sb-logout" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Pending Review</div>
+      <div class="topbar-right">
+        <div class="topbar-stat"><span>Pending</span> <strong id="tb-pending">0</strong></div>
+        <div class="topbar-divider"></div>
+        <div class="topbar-stat"><span>Total</span> <strong id="tb-total">0</strong></div>
+        <div class="topbar-divider"></div>
+        <button class="refresh-btn" onclick="loadApplications()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <!-- PENDING PAGE -->
+    <div class="admin-page active" id="page-pending">
+      <div class="stat-row">
+        <div class="stat-card pending"><div class="stat-icon">⏳</div><div class="stat-val" id="stat-pending">0</div><div class="stat-label">Awaiting Review</div></div>
+        <div class="stat-card approved"><div class="stat-icon">✅</div><div class="stat-val" id="stat-approved">0</div><div class="stat-label">Approved Creators</div></div>
+        <div class="stat-card rejected"><div class="stat-icon">❌</div><div class="stat-val" id="stat-rejected">0</div><div class="stat-label">Applications Rejected</div></div>
+        <div class="stat-card total"><div class="stat-icon">📊</div><div class="stat-val" id="stat-total">0</div><div class="stat-label">Total Applications</div></div>
+      </div>
+      <div id="pending-list-wrap"></div>
+    </div>
+
+    <!-- APPROVED PAGE -->
+    <div class="admin-page" id="page-approved">
+      <div id="approved-list-wrap"></div>
+    </div>
+
+    <!-- REJECTED PAGE -->
+    <div class="admin-page" id="page-rejected">
+      <div id="rejected-list-wrap"></div>
+    </div>
+
+    <!-- ALL PAGE -->
+    <div class="admin-page" id="page-all">
+      <div class="filter-bar">
+        <button class="filter-pill active" onclick="setFilter('all',this)">All <span class="fp-count" id="fp-all">0</span></button>
+        <button class="filter-pill" onclick="setFilter('pending',this)">Pending <span class="fp-count" id="fp-pending">0</span></button>
+        <button class="filter-pill" onclick="setFilter('approved',this)">Approved <span class="fp-count" id="fp-approved">0</span></button>
+        <button class="filter-pill" onclick="setFilter('rejected',this)">Rejected <span class="fp-count" id="fp-rejected">0</span></button>
+        <div class="filter-spacer"></div>
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Search by name or university…" oninput="renderAll()">
+        </div>
+      </div>
+      <div id="all-list-wrap"></div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div class="admin-page" id="page-settings">
+      <div class="settings-card">
+        <h3>EmailJS Configuration</h3>
+        <div class="settings-field">
+          <label>EmailJS Public Key</label>
+          <input type="text" id="cfg-pubkey" placeholder="e.g. user_xxxxxxxxxxxxxxxx">
+          <div class="settings-hint">Found in EmailJS → Account → General tab. Required for sending emails.</div>
+        </div>
+        <div class="settings-field">
+          <label>EmailJS Service ID</label>
+          <input type="text" id="cfg-service" placeholder="e.g. service_xxxxxxx">
+          <div class="settings-hint">Found in EmailJS → Email Services. Create a service connected to your sender email.</div>
+        </div>
+        <div class="settings-field">
+          <label>EmailJS Template ID — Approval</label>
+          <input type="text" id="cfg-approve-tpl" placeholder="e.g. template_approve">
+          <div class="settings-hint">Template variables available: <code>{{to_email}}</code> <code>{{applicant_name}}</code> <code>{{university}}</code></div>
+        </div>
+        <div class="settings-field">
+          <label>EmailJS Template ID — Rejection</label>
+          <input type="text" id="cfg-reject-tpl" placeholder="e.g. template_reject">
+          <div class="settings-hint">Template variables available: <code>{{to_email}}</code> <code>{{applicant_name}}</code> <code>{{university}}</code> <code>{{reason}}</code></div>
+        </div>
+        <button class="settings-save" onclick="saveEmailConfig()">Save Configuration</button>
+      </div>
+
+      <div class="settings-card">
+        <h3>Approval Email Template Preview</h3>
+        <div class="template-preview">
+          <strong>Subject:</strong> 🎉 Welcome to Aldernews — Your Creator Application is Approved!<br><br>
+          Hi <strong>{{applicant_name}}</strong>,<br><br>
+          We're thrilled to let you know that your application to join Aldernews as a verified student journalist has been <strong>approved</strong>!<br><br>
+          You can now log in to the Creator Portal at <strong>creator-portal.html</strong> using your university email and the password you set during application.<br><br>
+          Remember: every article must represent a clear perspective (Pro-Ruling or Pro-Opposition) and meet our 200-word minimum. The editorial team reviews all submissions before publishing.<br><br>
+          Welcome to the team,<br>
+          <strong>The Aldernews Editorial Team</strong>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h3>Rejection Email Template Preview</h3>
+        <div class="template-preview">
+          <strong>Subject:</strong> Aldernews Creator Application — Decision<br><br>
+          Hi <strong>{{applicant_name}}</strong>,<br><br>
+          Thank you for applying to join Aldernews from <strong>{{university}}</strong>. After careful review, we're unable to approve your application at this time.<br><br>
+          <strong>Reason:</strong> {{reason}}<br><br>
+          You're welcome to reapply in 3 months with an updated application. We receive a high volume of applications and look for strong, balanced journalism experience.<br><br>
+          Best of luck,<br>
+          <strong>The Aldernews Editorial Team</strong>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h3>Firebase Configuration</h3>
+        <div class="settings-field">
+          <label>Firebase Config JSON</label>
+          <textarea id="cfg-firebase" placeholder='Paste your Firebase config object here, e.g.:
+{
+  "apiKey": "...",
+  "authDomain": "...",
+  "projectId": "...",
+  ...
+}'></textarea>
+          <div class="settings-hint">Get this from Firebase Console → Project Settings → Your Apps → SDK setup. Paste the config object. <strong>Save and reload to apply.</strong></div>
+        </div>
+        <button class="settings-save" onclick="saveFirebaseConfig()">Save Firebase Config</button>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+          ⚠️ The creator portal must also write applications to Firestore for them to appear here. See setup guide below.
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h3>Setup Guide</h3>
+        <div style="font-size:13.5px;color:var(--bark);line-height:1.8">
+          <strong>Step 1 — Firebase Firestore</strong><br>
+          In creator-portal.html's <code>handleSignup()</code>, add this after validation to write to Firestore:<br>
+          <div class="template-preview" style="font-style:normal;margin:8px 0">
+            <code>db.collection('creator_applications').add({<br>
+            &nbsp;&nbsp;name: fname+' '+lname,<br>
+            &nbsp;&nbsp;email: email,<br>
+            &nbsp;&nbsp;university: uni,<br>
+            &nbsp;&nbsp;area: area,<br>
+            &nbsp;&nbsp;bio: bio,<br>
+            &nbsp;&nbsp;status: 'pending',<br>
+            &nbsp;&nbsp;appliedAt: firebase.firestore.FieldValue.serverTimestamp()<br>
+            });</code>
+          </div>
+          <strong>Step 2 — EmailJS</strong><br>
+          Create a free account at <a href="https://emailjs.com" target="_blank" style="color:var(--amber)">emailjs.com</a>, connect your Gmail/SMTP, create two templates (approval + rejection), and paste the IDs above.<br><br>
+          <strong>Step 3 — Demo Mode</strong><br>
+          Without Firestore, this admin portal loads realistic sample applications so you can preview the full UI and decision flow.
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY PAGE -->
+    <div class="admin-page" id="page-activity">
+      <div class="activity-list" id="activity-list">
+        <div class="empty-state"><div class="empty-icon">📜</div><div class="empty-title">No activity yet</div><div class="empty-sub">Actions you take will be logged here</div></div>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+</div><!-- /screen-admin -->
+
+<!-- ═══════════════════════════════════
+     APPLICATION DETAIL MODAL
+═══════════════════════════════════ -->
+<div class="modal-overlay" id="detail-modal" onclick="if(event.target===this)closeDetailModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="dm-name">Applicant Name</div>
+        <div id="dm-status-badge" style="margin-top:6px"></div>
+      </div>
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="dm-already-decided-banner"></div>
+      <div class="modal-section">
+        <h4>Personal Information</h4>
+        <div class="modal-row"><span class="modal-row-label">Full Name</span><span class="modal-row-val" id="dm-fullname">—</span></div>
+        <div class="modal-row"><span class="modal-row-label">Email</span><span class="modal-row-val" id="dm-email" style="font-family:'DM Mono',monospace;font-size:13px">—</span></div>
+        <div class="modal-row"><span class="modal-row-label">University</span><span class="modal-row-val" id="dm-uni">—</span></div>
+        <div class="modal-row"><span class="modal-row-label">Reporting Beat</span><span class="modal-row-val" id="dm-beat">—</span></div>
+        <div class="modal-row"><span class="modal-row-label">Applied</span><span class="modal-row-val" id="dm-date">—</span></div>
+      </div>
+      <div class="modal-section">
+        <h4>Application Statement</h4>
+        <div class="modal-essay" id="dm-bio">—</div>
+      </div>
+    </div>
+    <div class="modal-footer" id="dm-footer">
+      <button class="modal-btn-close" onclick="closeDetailModal()">Close</button>
+      <button class="modal-btn-reject" id="dm-reject-btn" onclick="openRejectFromModal()">✕ Reject</button>
+      <button class="modal-btn-approve" id="dm-approve-btn" onclick="approveFromModal()">✓ Approve</button>
+    </div>
+  </div>
+</div>
+
+<!-- REJECT REASON MODAL -->
+<div class="modal-overlay" id="reject-modal" onclick="if(event.target===this)closeRejectModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Reject Application</div>
+      <button class="modal-close" onclick="closeRejectModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13.5px;color:var(--muted);margin-bottom:18px">An email with the reason will be sent to <strong id="reject-modal-email" style="color:var(--bark)"></strong>.</p>
+      <label class="reject-reason-label">Reason for rejection</label>
+      <select class="reject-reason-select" id="reject-reason-select" onchange="updateRejectNote()">
+        <option value="">Select a reason…</option>
+        <option value="Personal email address used — please reapply with your official university email.">Personal email used</option>
+        <option value="Application statement was too brief or did not demonstrate journalism experience.">Insufficient application statement</option>
+        <option value="We were unable to verify your university enrolment or journalism programme.">Could not verify university enrolment</option>
+        <option value="The reporting beat you selected is currently over-represented in our roster. Please reapply in 3 months.">Beat currently full</option>
+        <option value="Your application did not meet our editorial standards for balanced, fact-based reporting.">Editorial standards not met</option>
+        <option value="custom">Custom reason…</option>
+      </select>
+      <label class="reject-reason-label">Message to applicant (included in email)</label>
+      <textarea class="reject-note" id="reject-note" placeholder="Write a personalised note to the applicant…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn-close" onclick="closeRejectModal()">Cancel</button>
+      <button class="modal-btn-reject" id="confirm-reject-btn" onclick="confirmReject()" style="background:var(--red);color:white;border:none">Send Rejection Email</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"><span id="t-icon">✅</span><span id="t-msg">Done</span></div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   FIREBASE CONFIG
+══════════════════════════════════════════════════ */
+let db = null;
+let firebaseReady = false;
+
+function initFirebase() {
+  const saved = localStorage.getItem('an_firebase_cfg');
+  if (saved) {
+    try {
+      const cfg = JSON.parse(saved);
+      if (!firebase.apps.length) firebase.initializeApp(cfg);
+      else firebase.app();
+      db = firebase.firestore();
+      firebaseReady = true;
+    } catch(e) {
+      console.warn('Firebase init failed:', e);
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   EMAIL CONFIG (localStorage)
+══════════════════════════════════════════════════ */
+let emailCfg = {
+  pubkey: '',
+  service: '',
+  approveTpl: '',
+  rejectTpl: ''
+};
+
+function loadEmailConfig() {
+  const saved = localStorage.getItem('an_email_cfg');
+  if (saved) {
+    emailCfg = {...emailCfg, ...JSON.parse(saved)};
+  }
+  document.getElementById('cfg-pubkey').value    = emailCfg.pubkey    || '';
+  document.getElementById('cfg-service').value   = emailCfg.service   || '';
+  document.getElementById('cfg-approve-tpl').value = emailCfg.approveTpl || '';
+  document.getElementById('cfg-reject-tpl').value  = emailCfg.rejectTpl  || '';
+}
+
+function saveEmailConfig() {
+  emailCfg.pubkey     = document.getElementById('cfg-pubkey').value.trim();
+  emailCfg.service    = document.getElementById('cfg-service').value.trim();
+  emailCfg.approveTpl = document.getElementById('cfg-approve-tpl').value.trim();
+  emailCfg.rejectTpl  = document.getElementById('cfg-reject-tpl').value.trim();
+  localStorage.setItem('an_email_cfg', JSON.stringify(emailCfg));
+  showToast('✅', 'Email config saved');
+}
+
+function saveFirebaseConfig() {
+  const raw = document.getElementById('cfg-firebase').value.trim();
+  try {
+    JSON.parse(raw);
+    localStorage.setItem('an_firebase_cfg', raw);
+    showToast('✅', 'Firebase config saved — reload to connect');
+  } catch(e) {
+    showToast('❌', 'Invalid JSON — check your config', true);
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   DEMO DATA (used when Firestore is not connected)
+══════════════════════════════════════════════════ */
+const DEMO_APPS = [
+  { id:'d1', name:'Priya Nair', email:'priya.nair@jmc.du.ac.in', university:'Delhi University — Journalism & Mass Communication', area:'Politics & Governance', bio:'I have been covering student union elections at DU for two years now, writing for our college magazine. I believe Aldernews is exactly what Indian political journalism needs — a platform that forces readers to hold both perspectives simultaneously rather than retreating to their echo chambers. My reporting focuses on how policy translates into lived experience at the ground level.', status:'pending', appliedAt:'2026-05-28' },
+  { id:'d2', name:'Arjun Mehta', email:'arjun.mehta@iimc.ac.in', university:'Indian Institute of Mass Communication, New Delhi', area:'Economy & Business', bio:'I completed my post-graduation in journalism from IIMC and have interned with The Hindu Business Line for six months covering markets and macro-economy. I want to bring the same rigour to Aldernews — explaining economic policy from both the government\'s perspective and the opposition\'s critique, letting numbers tell both stories honestly.', status:'pending', appliedAt:'2026-05-29' },
+  { id:'d3', name:'Sanya Kapoor', email:'sanya.kapoor@symbiosis.edu', university:'Symbiosis Institute of Media & Communication, Pune', area:'International Affairs', bio:'As a third-year journalism student specialising in international relations, I covered the India-ASEAN summit for our college website and wrote a three-part series on how Indian foreign policy is perceived differently by the ruling party and the main opposition. I am passionate about nuanced, fact-first reporting.', status:'pending', appliedAt:'2026-05-30' },
+  { id:'d4', name:'Rohan Das', email:'rohan.das@jadavpur.edu', university:'Jadavpur University, School of Media Studies', area:'Culture & Society', bio:'My journalism focuses on how cultural policy divides India — from language politics to heritage disputes. I have written for Scroll and Wire student sections. Aldernews\'s balanced model is the right framework for covering culture wars objectively.', status:'approved', appliedAt:'2026-05-20', decidedAt:'2026-05-22' },
+  { id:'d5', name:'Meera Iyer', email:'meera.iyer@manipal.edu', university:'Manipal Institute of Communication', area:'Technology & Innovation', bio:'Short statement.', status:'rejected', appliedAt:'2026-05-18', decidedAt:'2026-05-19', rejectReason:'Application statement was too brief or did not demonstrate journalism experience.' },
+  { id:'d6', name:'Kabir Singh', email:'kabir.singh@amu.ac.in', university:'Aligarh Muslim University — Mass Communication', area:'Politics & Governance', bio:'Covering student politics and local governance for four years through AMU\'s journalism society. My beat is the gap between political rhetoric and administrative reality. I want to apply that lens to national politics through Aldernews, ensuring readers always see both the government\'s stated rationale and the opposition\'s counter-narrative.', status:'pending', appliedAt:'2026-05-31' },
+];
+
+/* ══════════════════════════════════════════════════
+   APP STATE
+══════════════════════════════════════════════════ */
+let allApps = [];
+let currentFilter = 'all';
+let activeDetailId = null;
+let pendingRejectId = null;
+let activityLog = JSON.parse(localStorage.getItem('an_activity') || '[]');
+let adminUser = null;
+
+/* ══════════════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════════════ */
+window.addEventListener('load', () => {
+  initFirebase();
+  loadEmailConfig();
+
+  // Try to restore saved admin session (simple localStorage session)
+  const savedAdmin = localStorage.getItem('an_admin_session');
+  if (savedAdmin) {
+    adminUser = JSON.parse(savedAdmin);
+    showAdminShell();
+    loadApplications();
+  } else {
+    hideAuthLoading();
+    showScreen('screen-login');
+  }
+});
+
+function hideAuthLoading() {
+  const el = document.getElementById('auth-loading');
+  el.classList.add('hidden');
+  setTimeout(()=>el.style.display='none', 500);
+}
+
+/* ── ADMIN CREDENTIALS ── */
+const ADMIN_ID       = 'ivan1234';
+const ADMIN_PASSWORD = 'ivan@1234_admin_hello';
+
+function doAdminLogin() {
+  const id   = document.getElementById('admin-email').value.trim();
+  const pass = document.getElementById('admin-pass').value;
+  const btn  = document.getElementById('login-btn');
+
+  if (!id)   return showLoginError('Please enter your Admin ID.');
+  if (!pass) return showLoginError('Please enter your password.');
+
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+
+  setTimeout(() => {
+    if (id === ADMIN_ID && pass === ADMIN_PASSWORD) {
+      adminUser = { email: ADMIN_ID };
+      localStorage.setItem('an_admin_session', JSON.stringify(adminUser));
+      showAdminShell();
+      loadApplications();
+    } else {
+      showLoginError('Invalid Admin ID or password.');
+      btn.disabled = false;
+      btn.textContent = 'Sign In to Admin →';
+    }
+  }, 500);
+}
+
+function doLogout() {
+  localStorage.removeItem('an_admin_session');
+  adminUser = null;
+  allApps = [];
+  if (firebaseReady) firebase.auth().signOut().catch(()=>{});
+  showScreen('screen-login');
+  document.getElementById('admin-email').value = '';
+  document.getElementById('admin-pass').value = '';
+}
+
+function showAdminShell() {
+  hideAuthLoading();
+  showScreen('screen-admin');
+  if (adminUser) {
+    const id = adminUser.email || 'A';
+    const initial = id.charAt(0).toUpperCase();
+    document.getElementById('sb-av').textContent = initial;
+    document.getElementById('sb-name').textContent = id;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   LOAD APPLICATIONS
+══════════════════════════════════════════════════ */
+async function loadApplications() {
+  renderLoadingState();
+  try {
+    if (firebaseReady && db) {
+      const snap = await db.collection('creator_applications').orderBy('appliedAt','desc').get();
+      allApps = snap.docs.map(doc => ({ id: doc.id, ...doc.data(), appliedAt: doc.data().appliedAt?.toDate?.()?.toISOString?.()?.slice(0,10) || '—' }));
+    } else {
+      // Demo
+      await new Promise(r=>setTimeout(r,600));
+      allApps = [...DEMO_APPS];
+    }
+  } catch(e) {
+    console.error('Load error:', e);
+    allApps = [...DEMO_APPS];
+    showToast('⚠️', 'Firestore unavailable — showing demo data', true);
+  }
+  updateCounts();
+  renderCurrentPage();
+}
+
+function renderLoadingState() {
+  ['pending-list-wrap','approved-list-wrap','rejected-list-wrap','all-list-wrap'].forEach(id => {
+    document.getElementById(id).innerHTML = `
+      <div class="apps-table">
+        ${[1,2,3].map(()=>`
+          <div class="loading-row">
+            <div class="skel skel-av"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+              <div class="skel skel-line" style="width:40%"></div>
+              <div class="skel skel-line" style="width:65%"></div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   COUNTS & STATS
+══════════════════════════════════════════════════ */
+function updateCounts() {
+  const p = allApps.filter(a=>a.status==='pending').length;
+  const ap = allApps.filter(a=>a.status==='approved').length;
+  const rj = allApps.filter(a=>a.status==='rejected').length;
+  const tot = allApps.length;
+
+  ['stat-pending','tb-pending'].forEach(id=>setEl(id,p));
+  ['stat-approved'].forEach(id=>setEl(id,ap));
+  ['stat-rejected'].forEach(id=>setEl(id,rj));
+  ['stat-total','tb-total'].forEach(id=>setEl(id,tot));
+
+  setEl('sb-count-pending', p);
+  setEl('sb-count-approved', ap);
+  setEl('sb-count-rejected', rj);
+  setEl('sb-count-all', tot);
+  setEl('fp-all', tot); setEl('fp-pending', p); setEl('fp-approved', ap); setEl('fp-rejected', rj);
+
+  document.getElementById('sb-count-pending').className = 'sb-link-count' + (p>0?'':' zero');
+  document.getElementById('sb-count-approved').className = 'sb-link-count zero';
+  document.getElementById('sb-count-rejected').className = 'sb-link-count zero';
+}
+
+function setEl(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+/* ══════════════════════════════════════════════════
+   RENDER HELPERS
+══════════════════════════════════════════════════ */
+function renderCurrentPage() {
+  renderList('pending-list-wrap', allApps.filter(a=>a.status==='pending'));
+  renderList('approved-list-wrap', allApps.filter(a=>a.status==='approved'));
+  renderList('rejected-list-wrap', allApps.filter(a=>a.status==='rejected'));
+  renderAll();
+}
+
+function renderList(wrapperId, apps) {
+  const wrap = document.getElementById(wrapperId);
+  if (!apps.length) {
+    wrap.innerHTML = `<div class="apps-table"><div class="empty-state"><div class="empty-icon">🗂️</div><div class="empty-title">Nothing here</div><div class="empty-sub">No applications in this category</div></div></div>`;
+    return;
+  }
+  const statusOf = s => s==='pending'?'pending':s==='approved'?'approved':'rejected';
+  const labelOf  = s => s==='pending'?'⏳ Pending':s==='approved'?'✓ Approved':'✕ Rejected';
+  wrap.innerHTML = `
+    <div class="apps-table">
+      <div class="apps-table-header">
+        <div>Applicant</div><div>University</div>
+        <div class="th-beat">Beat</div>
+        <div>Status</div>
+        <div class="th-date">Applied</div>
+        <div>Actions</div>
+      </div>
+      ${apps.map(a=>`
+        <div class="app-row" onclick="openDetail('${a.id}')">
+          <div><div class="app-name">${esc(a.name)}</div><div class="app-email">${esc(a.email)}</div></div>
+          <div class="app-uni">${esc(a.university||'—')}</div>
+          <div class="app-beat">${esc(a.area||'—')}</div>
+          <div><span class="status-pill ${statusOf(a.status)}"><span class="status-dot"></span>${labelOf(a.status)}</span></div>
+          <div class="app-date-cell"><span class="app-date">${a.appliedAt||'—'}</span></div>
+          <div class="action-btns" onclick="event.stopPropagation()">
+            ${a.status==='pending'?`
+              <button class="btn-approve" onclick="quickApprove('${a.id}')">✓</button>
+              <button class="btn-reject"  onclick="quickReject('${a.id}')">✕</button>
+            `:`<button class="btn-view" onclick="openDetail('${a.id}')">View</button>`}
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function renderAll() {
+  const query  = (document.getElementById('search-input')?.value||'').toLowerCase();
+  const filter = currentFilter;
+  let apps = allApps;
+  if (filter !== 'all') apps = apps.filter(a=>a.status===filter);
+  if (query) apps = apps.filter(a=>(a.name+a.university+a.email).toLowerCase().includes(query));
+  renderList('all-list-wrap', apps);
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+
+/* ══════════════════════════════════════════════════
+   APPROVE / REJECT ACTIONS
+══════════════════════════════════════════════════ */
+async function quickApprove(id) {
+  await approveApp(id);
+}
+
+async function quickReject(id) {
+  pendingRejectId = id;
+  const app = allApps.find(a=>a.id===id);
+  if (!app) return;
+  document.getElementById('reject-modal-email').textContent = app.email;
+  document.getElementById('reject-reason-select').value = '';
+  document.getElementById('reject-note').value = '';
+  openModal('reject-modal');
+}
+
+async function approveApp(id) {
+  const app = allApps.find(a=>a.id===id);
+  if (!app) return;
+
+  setAppStatus(id, 'approved');
+  updateCounts();
+  renderCurrentPage();
+
+  // Send email
+  const emailSent = await sendEmail('approve', app, '');
+  const msg = emailSent ? `✅ ${app.name} approved — email sent` : `✅ ${app.name} approved (email not configured)`;
+  showToast('✅', msg);
+  logActivity('approved', `Approved ${app.name} (${app.email})`, id);
+
+  // Update Firestore
+  if (firebaseReady && db) {
+    await db.collection('creator_applications').doc(id).update({ status:'approved', decidedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(console.error);
+  }
+}
+
+async function confirmReject() {
+  const id = pendingRejectId;
+  if (!id) return;
+  const app = allApps.find(a=>a.id===id);
+  if (!app) return;
+
+  const selectVal = document.getElementById('reject-reason-select').value;
+  const note = document.getElementById('reject-note').value.trim();
+  const reason = selectVal === 'custom' ? note : (selectVal || note || 'Your application did not meet our current requirements.');
+
+  closeRejectModal();
+  closeDetailModal();
+
+  setAppStatus(id, 'rejected', reason);
+  updateCounts();
+  renderCurrentPage();
+
+  const emailSent = await sendEmail('reject', app, reason);
+  const msg = emailSent ? `Application rejected — email sent to ${app.name}` : `Rejected ${app.name} (email not configured)`;
+  showToast('✕', msg);
+  logActivity('rejected', `Rejected ${app.name} (${app.email}) — ${reason}`, id);
+
+  if (firebaseReady && db) {
+    await db.collection('creator_applications').doc(id).update({ status:'rejected', rejectReason: reason, decidedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(console.error);
+  }
+}
+
+function setAppStatus(id, status, reason) {
+  const idx = allApps.findIndex(a=>a.id===id);
+  if (idx !== -1) {
+    allApps[idx].status = status;
+    allApps[idx].decidedAt = new Date().toISOString().slice(0,10);
+    if (reason) allApps[idx].rejectReason = reason;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   APPROVE / REJECT FROM DETAIL MODAL
+══════════════════════════════════════════════════ */
+function approveFromModal() {
+  if (!activeDetailId) return;
+  closeDetailModal();
+  approveApp(activeDetailId);
+}
+
+function openRejectFromModal() {
+  if (!activeDetailId) return;
+  pendingRejectId = activeDetailId;
+  const app = allApps.find(a=>a.id===activeDetailId);
+  if (!app) return;
+  document.getElementById('reject-modal-email').textContent = app.email;
+  document.getElementById('reject-reason-select').value = '';
+  document.getElementById('reject-note').value = '';
+  openModal('reject-modal');
+}
+
+/* ══════════════════════════════════════════════════
+   SEND EMAIL (EmailJS)
+══════════════════════════════════════════════════ */
+async function sendEmail(type, app, reason) {
+  if (!emailCfg.pubkey || !emailCfg.service) return false;
+  const tpl = type==='approve' ? emailCfg.approveTpl : emailCfg.rejectTpl;
+  if (!tpl) return false;
+
+  try {
+    emailjs.init(emailCfg.pubkey);
+    const params = {
+      to_email:        app.email,
+      applicant_name:  app.name,
+      university:      app.university || '',
+      reason:          reason || '',
+    };
+    await emailjs.send(emailCfg.service, tpl, params);
+    return true;
+  } catch(e) {
+    console.error('EmailJS error:', e);
+    showToast('⚠️', 'Email failed: ' + (e.text || e.message || 'Check config'), true);
+    return false;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   DETAIL MODAL
+══════════════════════════════════════════════════ */
+function openDetail(id) {
+  const app = allApps.find(a=>a.id===id);
+  if (!app) return;
+  activeDetailId = id;
+
+  document.getElementById('dm-name').textContent    = app.name;
+  document.getElementById('dm-fullname').textContent = app.name;
+  document.getElementById('dm-email').textContent   = app.email;
+  document.getElementById('dm-uni').textContent      = app.university || '—';
+  document.getElementById('dm-beat').textContent    = app.area || '—';
+  document.getElementById('dm-date').textContent    = app.appliedAt || '—';
+  document.getElementById('dm-bio').textContent     = app.bio || '—';
+
+  // Status badge
+  const badge = document.getElementById('dm-status-badge');
+  badge.innerHTML = `<span class="status-pill ${app.status}"><span class="status-dot"></span>${app.status==='pending'?'⏳ Pending':app.status==='approved'?'✓ Approved':'✕ Rejected'}</span>`;
+
+  // Already decided banner
+  const banner = document.getElementById('dm-already-decided-banner');
+  if (app.status === 'approved') {
+    banner.innerHTML = `<div class="modal-status-row approved-banner">✅ This application was approved on ${app.decidedAt||'—'}.</div>`;
+  } else if (app.status === 'rejected') {
+    banner.innerHTML = `<div class="modal-status-row rejected-banner">✕ This application was rejected on ${app.decidedAt||'—'}${app.rejectReason?' — '+app.rejectReason:''}.</div>`;
+  } else {
+    banner.innerHTML = '';
+  }
+
+  // Footer buttons
+  const footer = document.getElementById('dm-footer');
+  if (app.status === 'pending') {
+    footer.innerHTML = `
+      <button class="modal-btn-close" onclick="closeDetailModal()">Close</button>
+      <button class="modal-btn-reject" onclick="openRejectFromModal()">✕ Reject</button>
+      <button class="modal-btn-approve" onclick="approveFromModal()">✓ Approve</button>`;
+  } else {
+    footer.innerHTML = `<button class="modal-btn-close" onclick="closeDetailModal()">Close</button>`;
+  }
+
+  openModal('detail-modal');
+}
+
+function closeDetailModal() {
+  closeModal('detail-modal');
+  activeDetailId = null;
+}
+
+function openRejectModal() {
+  openModal('reject-modal');
+}
+function closeRejectModal() {
+  closeModal('reject-modal');
+}
+
+/* ══════════════════════════════════════════════════
+   REJECT NOTE AUTO-FILL
+══════════════════════════════════════════════════ */
+function updateRejectNote() {
+  const val = document.getElementById('reject-reason-select').value;
+  if (val && val !== 'custom') {
+    document.getElementById('reject-note').value = val;
+  } else if (val === 'custom') {
+    document.getElementById('reject-note').value = '';
+    document.getElementById('reject-note').focus();
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   ACTIVITY LOG
+══════════════════════════════════════════════════ */
+function logActivity(type, text, appId) {
+  activityLog.unshift({ type, text, appId, time: new Date().toLocaleString('en-IN', {hour12:true}) });
+  if (activityLog.length > 50) activityLog = activityLog.slice(0,50);
+  localStorage.setItem('an_activity', JSON.stringify(activityLog));
+  renderActivityLog();
+}
+
+function renderActivityLog() {
+  const list = document.getElementById('activity-list');
+  if (!activityLog.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📜</div><div class="empty-title">No activity yet</div><div class="empty-sub">Actions you take will be logged here</div></div>`;
+    return;
+  }
+  list.innerHTML = activityLog.map(item=>`
+    <div class="activity-item">
+      <div class="activity-dot ${item.type}"></div>
+      <div class="activity-body">
+        <div class="activity-text">${esc(item.text)}</div>
+        <div class="activity-time">${item.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════════════════════════
+   NAV
+══════════════════════════════════════════════════ */
+const PAGE_TITLES = { pending:'Pending Review', approved:'Approved Creators', rejected:'Rejected', all:'All Applications', settings:'Email Templates & Settings', activity:'Activity Log' };
+
+function showPage(name, btn) {
+  document.querySelectorAll('.admin-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[name] || name;
+  if (name === 'activity') renderActivityLog();
+  window.scrollTo(0,0);
+}
+
+/* ══════════════════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('login-btn').disabled = false;
+  document.getElementById('login-btn').textContent = 'Sign In to Admin →';
+}
+function clearLoginError() {
+  document.getElementById('login-error').style.display = 'none';
+}
+
+let _tt;
+function showToast(icon, msg, isError=false) {
+  const t = document.getElementById('toast');
+  document.getElementById('t-icon').textContent = icon;
+  document.getElementById('t-msg').textContent = msg;
+  t.className = isError ? 'show error' : 'show';
+  clearTimeout(_tt);
+  _tt = setTimeout(()=>{t.classList.remove('show','error')}, 3000);
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
