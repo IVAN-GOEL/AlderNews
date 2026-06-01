@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aldernews — Creator Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:  #FBF6EC;
+  --leaf:   #E8C46A;
+  --amber:  #C47C2B;
+  --soil:   #6B3D14;
+  --bark:   #3D2B1F;
+  --green:  #3E6B3A;
+  --canopy: #1C3320;
+  --muted:  #9C8A74;
+  --paper:  #F4ECD8;
+  --shadow: rgba(28,20,8,0.12);
+  --red:    #c0392b;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--bark);min-height:100vh}
+
+/* ── SCREENS ── */
+.screen{display:none}
+.screen.active{display:block}
+
+/* ══════════════════════════════════════════
+   ONBOARDING / AUTH SPLIT SCREEN
+══════════════════════════════════════════ */
+#screen-auth{min-height:100vh;display:flex}
+
+.auth-left{
+  flex:1.15;background:var(--canopy);
+  padding:60px 64px;display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;overflow:hidden;
+}
+.auth-left::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 20% 80%,rgba(196,124,43,.25),transparent 55%),
+    radial-gradient(ellipse at 80% 20%,rgba(62,107,58,.18),transparent 50%);
+}
+.auth-left::after{
+  content:'';position:absolute;bottom:-80px;right:-80px;
+  width:320px;height:320px;border-radius:50%;
+  border:40px solid rgba(232,196,106,.06);
+}
+.al-top{position:relative;z-index:1}
+.al-logo{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;color:var(--leaf);letter-spacing:.04em;margin-bottom:4px}
+.al-logo span{color:var(--amber)}
+.al-pill{display:inline-block;background:rgba(232,196,106,.12);border:1px solid rgba(232,196,106,.2);color:var(--leaf);font-size:11px;font-weight:600;letter-spacing:.08em;padding:4px 12px;border-radius:99px;text-transform:uppercase;margin-top:8px}
+.al-mid{position:relative;z-index:1;padding:40px 0}
+.al-headline{font-family:'Playfair Display',serif;font-size:38px;font-weight:900;color:white;line-height:1.2;margin-bottom:18px}
+.al-headline em{color:var(--leaf);font-style:normal}
+.al-body{color:rgba(255,255,255,.5);font-size:14px;line-height:1.7;max-width:400px;margin-bottom:28px}
+.al-steps{display:flex;flex-direction:column;gap:16px}
+.al-step{display:flex;align-items:flex-start;gap:14px}
+.step-num{width:32px;height:32px;border-radius:8px;background:rgba(232,196,106,.1);border:1px solid rgba(232,196,106,.2);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;color:var(--leaf);font-weight:500;flex-shrink:0}
+.step-text strong{color:white;font-size:13.5px;display:block;margin-bottom:2px}
+.step-text span{color:rgba(255,255,255,.38);font-size:12px}
+.al-bottom{position:relative;z-index:1;color:rgba(255,255,255,.22);font-size:11.5px}
+
+.auth-right{
+  flex:0.85;background:var(--cream);
+  display:flex;align-items:center;justify-content:center;padding:60px 48px;
+}
+.auth-box{width:100%;max-width:400px}
+.auth-box h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--canopy);margin-bottom:4px}
+.auth-box .sub{color:var(--muted);font-size:13.5px;margin-bottom:28px;line-height:1.5}
+
+/* Tab switcher */
+.auth-tabs{display:flex;background:var(--paper);border-radius:10px;padding:4px;margin-bottom:28px;gap:4px}
+.auth-tab{flex:1;padding:9px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);border-radius:7px;cursor:pointer;transition:all .2s}
+.auth-tab.active{background:white;color:var(--canopy);font-weight:600;box-shadow:0 1px 4px var(--shadow)}
+
+/* Form */
+.form-section{display:none}
+.form-section.active{display:block}
+.f-group{margin-bottom:14px}
+.f-group label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px}
+.f-group input,.f-group select,.f-group textarea{
+  width:100%;padding:11px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:9px;
+  font-size:14px;font-family:'DM Sans',sans-serif;color:var(--bark);background:white;
+  outline:none;transition:border-color .2s;
+}
+.f-group input:focus,.f-group select:focus,.f-group textarea:focus{border-color:var(--amber)}
+.f-group input.err{border-color:var(--red)}
+.f-group textarea{resize:vertical;min-height:80px;line-height:1.5}
+.f-group select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239C8A74' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.f-hint{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.4}
+.f-hint.warn{color:var(--amber)}
+.err-msg{font-size:11.5px;color:var(--red);margin-top:4px;display:none}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* University email special field */
+.uni-field-wrap{position:relative}
+.uni-badge{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:var(--paper);border:1px solid rgba(0,0,0,.1);border-radius:6px;
+  font-size:10.5px;font-weight:600;color:var(--muted);padding:3px 8px;pointer-events:none;
+}
+.uni-badge.valid{background:#EAF2E9;border-color:rgba(62,107,58,.2);color:var(--green)}
+
+/* Submit btn */
+.submit-btn{
+  width:100%;padding:13px;background:var(--canopy);color:var(--leaf);
+  font-size:14.5px;font-weight:700;border:none;border-radius:10px;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+  letter-spacing:.02em;margin-top:4px;
+}
+.submit-btn:hover{background:var(--soil)}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed}
+
+.or-row{display:flex;align-items:center;gap:12px;margin:18px 0}
+.or-line{flex:1;height:1px;background:rgba(0,0,0,.1)}
+.or-txt{font-size:11.5px;color:var(--muted)}
+
+.switch-link{text-align:center;margin-top:16px;font-size:13px;color:var(--muted)}
+.switch-link a{color:var(--amber);font-weight:600;cursor:pointer}
+
+.error-banner{
+  background:#fff0f0;border:1.5px solid #ffcccc;border-radius:8px;
+  padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px;display:none;
+}
+
+/* ══════════════════════════════════════════
+   PENDING APPROVAL SCREEN
+══════════════════════════════════════════ */
+#screen-pending{
+  min-height:100vh;background:var(--canopy);
+  display:flex;align-items:center;justify-content:center;padding:40px 24px;
+}
+.pending-card{
+  background:white;border-radius:20px;padding:48px 48px;max-width:520px;width:100%;
+  text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);
+}
+.pending-icon{
+  width:80px;height:80px;background:linear-gradient(135deg,var(--paper),var(--cream));
+  border:2px solid rgba(196,124,43,.2);border-radius:20px;
+  display:flex;align-items:center;justify-content:center;font-size:36px;
+  margin:0 auto 24px;
+}
+.pending-card h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--canopy);margin-bottom:10px}
+.pending-card p{color:var(--muted);font-size:14px;line-height:1.7;margin-bottom:28px}
+.pending-info-row{
+  display:flex;align-items:center;gap:10px;background:var(--paper);border-radius:10px;
+  padding:12px 16px;margin-bottom:10px;text-align:left;
+}
+.pending-info-row .pir-icon{font-size:18px;flex-shrink:0}
+.pending-info-row .pir-text strong{display:block;font-size:13px;font-weight:600;color:var(--bark);margin-bottom:1px}
+.pending-info-row .pir-text span{font-size:12px;color:var(--muted)}
+.pending-status-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#FFF9EC;border:1.5px solid rgba(196,124,43,.3);
+  border-radius:99px;padding:8px 18px;font-size:13px;font-weight:600;color:var(--amber);
+  margin-bottom:28px;
+}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.pending-logout{
+  background:none;border:1.5px solid rgba(0,0,0,.12);color:var(--muted);
+  font-size:13px;font-weight:500;padding:10px 24px;border-radius:9px;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.pending-logout:hover{border-color:var(--red);color:var(--red)}
+
+/* ══════════════════════════════════════════
+   CREATOR DASHBOARD
+══════════════════════════════════════════ */
+#screen-dashboard{min-height:100vh;background:var(--cream)}
+
+/* Nav */
+.creator-nav{
+  background:var(--canopy);padding:0 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  height:64px;position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(0,0,0,.3);
+}
+.cn-logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--leaf);cursor:pointer}
+.cn-logo span{color:var(--amber)}
+.cn-logo small{font-size:11px;font-weight:400;color:rgba(255,255,255,.35);margin-left:8px;font-family:'DM Mono',monospace;letter-spacing:.04em}
+.cn-links{display:flex;gap:4px}
+.cn-link{
+  color:rgba(255,255,255,.6);font-size:13px;font-weight:500;padding:8px 14px;
+  border-radius:6px;cursor:pointer;border:none;background:none;
+  font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.cn-link:hover,.cn-link.active{color:var(--leaf);background:rgba(232,196,106,.12)}
+.cn-right{display:flex;align-items:center;gap:10px}
+.creator-badge{
+  background:rgba(232,196,106,.12);border:1px solid rgba(232,196,106,.25);
+  color:var(--leaf);font-size:11px;font-weight:600;letter-spacing:.06em;
+  padding:4px 10px;border-radius:99px;text-transform:uppercase;
+}
+.cn-avatar{
+  width:36px;height:36px;border-radius:50%;background:var(--amber);color:white;
+  font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border:2px solid rgba(232,196,106,.4);
+}
+.cn-logout{color:rgba(255,255,255,.4);font-size:12px;padding:6px 10px;border-radius:6px;cursor:pointer;border:1px solid rgba(255,255,255,.12);background:none;font-family:'DM Sans',sans-serif;transition:all .2s}
+.cn-logout:hover{color:white;border-color:rgba(255,255,255,.3)}
+
+/* Dashboard pages */
+.dash-page{display:none}
+.dash-page.active{display:block}
+
+/* ── HOME / STATS ── */
+.dash-header{
+  background:linear-gradient(135deg,var(--canopy) 0%,#2a4d30 100%);
+  padding:36px 48px 32px;
+}
+.dash-header h1{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--leaf);margin-bottom:4px}
+.dash-header p{color:rgba(255,255,255,.45);font-size:13.5px}
+
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:28px 48px;max-width:1200px;margin:0 auto}
+.stat-card{background:white;border-radius:12px;padding:20px 22px;box-shadow:0 2px 10px var(--shadow)}
+.stat-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.stat-val{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:var(--canopy)}
+.stat-sub{font-size:12px;color:var(--green);margin-top:4px;font-weight:500}
+
+.dash-content{max-width:1200px;margin:0 auto;padding:0 48px 60px;display:grid;grid-template-columns:1fr 300px;gap:28px}
+
+.content-section-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--canopy);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--leaf);display:inline-block}
+
+/* Post items in dashboard */
+.post-item{
+  background:white;border-radius:12px;padding:16px 18px;margin-bottom:12px;
+  display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px var(--shadow);
+}
+.post-type-dot{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.dot-article{background:#EAF2E9}
+.dot-video{background:#F3E8FF}
+.post-body{flex:1;min-width:0}
+.post-body h4{font-size:14px;font-weight:600;color:var(--bark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.post-body p{font-size:12px;color:var(--muted)}
+.post-status{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:99px;white-space:nowrap}
+.ps-live{background:#EAF2E9;color:var(--green)}
+.ps-review{background:#FFF9EC;color:var(--amber)}
+.ps-draft{background:var(--paper);color:var(--muted)}
+.post-actions{display:flex;gap:6px;flex-shrink:0}
+.icon-btn{width:30px;height:30px;border:1.5px solid rgba(0,0,0,.1);background:none;border-radius:7px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .2s;color:var(--muted)}
+.icon-btn:hover{border-color:var(--amber);color:var(--amber)}
+
+/* ── UPLOAD PAGE ── */
+.upload-page-inner{max-width:760px;margin:0 auto;padding:36px 48px 60px}
+.upload-page-inner h2{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--canopy);margin-bottom:6px}
+.upload-page-inner .up-sub{color:var(--muted);font-size:13.5px;margin-bottom:28px}
+
+/* Type chooser */
+.type-chooser{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
+.type-card{
+  border:2px solid rgba(0,0,0,.08);border-radius:14px;padding:20px;cursor:pointer;
+  background:white;transition:all .2s;text-align:left;font-family:'DM Sans',sans-serif;
+}
+.type-card:hover{border-color:var(--amber);box-shadow:0 4px 16px var(--shadow)}
+.type-card.selected{border-color:var(--amber);background:#FFFDF6}
+.type-card-icon{font-size:28px;margin-bottom:10px}
+.type-card h3{font-size:15px;font-weight:700;color:var(--bark);margin-bottom:4px}
+.type-card p{font-size:12.5px;color:var(--muted);line-height:1.5}
+
+/* Upload form sections */
+.upload-form{display:none}
+.upload-form.active{display:block}
+
+/* Drag-drop zone */
+.drop-zone{
+  border:2px dashed rgba(196,124,43,.35);border-radius:14px;
+  padding:40px;text-align:center;background:rgba(196,124,43,.03);
+  cursor:pointer;transition:all .2s;margin-bottom:20px;
+  position:relative;
+}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--amber);background:rgba(196,124,43,.07)}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.drop-icon{font-size:36px;margin-bottom:10px}
+.drop-title{font-size:15px;font-weight:600;color:var(--bark);margin-bottom:4px}
+.drop-sub{font-size:12.5px;color:var(--muted)}
+.drop-accepted{font-size:11.5px;color:var(--amber);margin-top:8px;font-weight:500}
+
+.file-preview{
+  background:var(--paper);border-radius:10px;padding:12px 14px;
+  display:flex;align-items:center;gap:10px;margin-bottom:20px;
+}
+.file-preview-icon{font-size:20px}
+.file-preview-name{font-size:13.5px;font-weight:500;color:var(--bark);flex:1}
+.file-preview-size{font-size:12px;color:var(--muted)}
+.file-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 4px}
+.file-remove:hover{color:var(--red)}
+
+/* Article rich textarea */
+.article-body-field{
+  width:100%;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;
+  font-size:14.5px;font-family:'Playfair Display',serif;color:var(--bark);
+  background:white;outline:none;transition:border-color .2s;
+  padding:16px;min-height:260px;line-height:1.8;resize:vertical;
+}
+.article-body-field:focus{border-color:var(--amber)}
+
+.upload-actions{display:flex;gap:10px;margin-top:28px}
+.btn-draft{
+  padding:12px 22px;background:none;border:1.5px solid rgba(0,0,0,.15);
+  color:var(--muted);font-size:14px;font-weight:500;border-radius:10px;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.btn-draft:hover{border-color:var(--amber);color:var(--amber)}
+.btn-submit{
+  flex:1;padding:13px;background:var(--canopy);color:var(--leaf);
+  font-size:14.5px;font-weight:700;border:none;border-radius:10px;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;letter-spacing:.02em;
+}
+.btn-submit:hover{background:var(--soil)}
+.btn-submit:disabled{opacity:.5;cursor:not-allowed}
+
+/* Tag picker */
+.tag-picker{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.tp-btn{
+  padding:6px 14px;border-radius:99px;border:1.5px solid rgba(0,0,0,.1);
+  background:white;font-size:12.5px;font-weight:500;color:var(--muted);
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.tp-btn:hover{border-color:var(--amber);color:var(--amber)}
+.tp-btn.active{border-color:var(--canopy);background:var(--canopy);color:var(--leaf)}
+
+/* ── PROFILE ── */
+.profile-page-inner{max-width:680px;margin:0 auto;padding:36px 48px 60px}
+.profile-avatar-big{
+  width:80px;height:80px;border-radius:50%;background:var(--amber);
+  color:white;font-family:'Playfair Display',serif;font-size:32px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;margin-bottom:16px;
+  border:3px solid rgba(196,124,43,.3);
+}
+.profile-name{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--canopy);margin-bottom:4px}
+.profile-meta{font-size:13px;color:var(--muted);margin-bottom:24px}
+.profile-section{background:white;border-radius:14px;padding:22px;margin-bottom:16px;box-shadow:0 2px 8px var(--shadow)}
+.profile-section h3{font-size:14px;font-weight:700;color:var(--canopy);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--paper)}
+.info-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--paper)}
+.info-row:last-child{border-bottom:none}
+.info-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;min-width:110px}
+.info-val{font-size:13.5px;color:var(--bark)}
+.info-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;background:#EAF2E9;color:var(--green)}
+
+/* Sidebar widget */
+.dash-sidebar{}
+.sidebar-widget{background:white;border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 2px 8px var(--shadow)}
+.sw-title{font-size:13px;font-weight:700;color:var(--canopy);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--paper)}
+.guide-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.guide-item:last-child{margin-bottom:0}
+.guide-num{width:22px;height:22px;border-radius:6px;background:var(--paper);font-size:10.5px;font-weight:700;color:var(--amber);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.guide-text{font-size:12.5px;color:var(--muted);line-height:1.5}
+
+/* toast */
+#toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(12px);
+  background:var(--canopy);color:var(--leaf);font-size:13.5px;font-weight:500;
+  padding:11px 22px;border-radius:10px;opacity:0;pointer-events:none;
+  transition:all .3s;white-space:nowrap;z-index:9999;
+  display:flex;align-items:center;gap:8px;box-shadow:0 6px 24px rgba(0,0,0,.3);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* success submit modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(28,20,8,.5);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:white;border-radius:18px;padding:36px;max-width:420px;width:90%;text-align:center}
+.modal h3{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--canopy);margin-bottom:8px}
+.modal p{color:var(--muted);font-size:13.5px;line-height:1.6;margin-bottom:24px}
+.modal-icon{font-size:44px;margin-bottom:16px}
+.modal-close{
+  width:100%;padding:12px;background:var(--canopy);color:var(--leaf);
+  font-size:14px;font-weight:700;border:none;border-radius:10px;
+  cursor:pointer;font-family:'DM Sans',sans-serif;
+}
+
+/* responsive tweaks */
+@media(max-width:900px){
+  .auth-left{display:none}
+  .auth-right{padding:40px 28px}
+  .stats-grid{grid-template-columns:1fr 1fr;padding:20px 24px}
+  .dash-content{grid-template-columns:1fr;padding:0 24px 40px}
+  .upload-page-inner,.profile-page-inner{padding:28px 24px 40px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 1: AUTH (Login / Signup)
+═══════════════════════════════════════ -->
+<div class="screen active" id="screen-auth">
+  <div id="screen-auth-inner" style="display:flex;min-height:100vh">
+    <div class="auth-left">
+      <div class="al-top">
+        <div class="al-logo">Alder<span>news</span></div>
+        <div class="al-pill">✦ Creator Portal</div>
+      </div>
+      <div class="al-mid">
+        <div class="al-headline">Tell both sides.<br><em>From your campus.</em></div>
+        <div class="al-body">Aldernews is student-powered journalism that forces balance. As a creator, you publish the stories your campus is afraid to ignore.</div>
+        <div class="al-steps">
+          <div class="al-step">
+            <div class="step-num">01</div>
+            <div class="step-text"><strong>Sign up with your university email</strong><span>Verified .edu or official university domains only</span></div>
+          </div>
+          <div class="al-step">
+            <div class="step-num">02</div>
+            <div class="step-text"><strong>Await editorial approval</strong><span>Our team reviews every application personally</span></div>
+          </div>
+          <div class="al-step">
+            <div class="step-num">03</div>
+            <div class="step-text"><strong>Publish articles &amp; videos</strong><span>Reach readers across every campus in India</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="al-bottom">© 2026 Aldernews · Student Journalism Platform · Both sides. Always.</div>
+    </div>
+
+    <div class="auth-right">
+      <div class="auth-box">
+        <h2>Creator Access</h2>
+        <p class="sub">Sign in to your creator account or apply to join</p>
+
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchAuthTab('login',this)">Sign In</button>
+          <button class="auth-tab" onclick="switchAuthTab('signup',this)">Apply as Creator</button>
+        </div>
+
+        <div class="error-banner" id="auth-error"></div>
+
+        <!-- LOGIN SECTION -->
+        <div class="form-section active" id="fs-login">
+          <div class="f-group">
+            <label>University Email</label>
+            <div class="uni-field-wrap">
+              <input type="email" id="login-email" placeholder="you@university.edu" oninput="checkUniEmail(this,'login-uni-badge')">
+              <span class="uni-badge" id="login-uni-badge">@edu</span>
+            </div>
+          </div>
+          <div class="f-group">
+            <label>Password</label>
+            <input type="password" id="login-pass" placeholder="••••••••">
+          </div>
+          <button class="submit-btn" onclick="handleLogin()">Sign In to Creator Portal</button>
+          <div class="switch-link" style="margin-top:14px">No account yet? <a onclick="switchAuthTab('signup',document.querySelector('.auth-tab:last-child'))">Apply as a creator →</a></div>
+          <div class="switch-link" style="margin-top:10px">Just a reader? <a href="index.html">Sign in to Aldernews →</a></div>
+        </div>
+
+        <!-- SIGNUP SECTION -->
+        <div class="form-section" id="fs-signup">
+          <div class="f-row">
+            <div class="f-group">
+              <label>First Name</label>
+              <input type="text" id="su-fname" placeholder="Priya">
+            </div>
+            <div class="f-group">
+              <label>Last Name</label>
+              <input type="text" id="su-lname" placeholder="Sharma">
+            </div>
+          </div>
+          <div class="f-group">
+            <label>University / College Name</label>
+            <input type="text" id="su-university" placeholder="e.g. Symbiosis Institute, IIMC, Jadavpur University">
+          </div>
+          <div class="f-group">
+            <label>University Email <span style="color:var(--red)">*</span></label>
+            <div class="uni-field-wrap">
+              <input type="email" id="su-email" placeholder="you@university.edu" oninput="checkUniEmail(this,'su-uni-badge')">
+              <span class="uni-badge" id="su-uni-badge">@edu</span>
+            </div>
+            <div class="f-hint warn">⚠ Must be your official university / college email. Personal Gmail addresses will be rejected.</div>
+          </div>
+          <div class="f-group">
+            <label>Area of Reporting</label>
+            <select id="su-area">
+              <option value="">Select your beat…</option>
+              <option>Politics &amp; Governance</option>
+              <option>Economy &amp; Business</option>
+              <option>International Affairs</option>
+              <option>Environment &amp; Science</option>
+              <option>Culture &amp; Society</option>
+              <option>Technology &amp; Innovation</option>
+              <option>Sports</option>
+              <option>Video Journalism</option>
+            </select>
+          </div>
+          <div class="f-group">
+            <label>Why do you want to join Aldernews?</label>
+            <textarea id="su-bio" placeholder="Tell us about your journalism experience, what stories you want to tell, and why balanced reporting matters to you… (min. 60 words)"></textarea>
+            <div class="f-hint" id="bio-count">0 / 60 words minimum</div>
+          </div>
+          <div class="f-group">
+            <label>Password</label>
+            <input type="password" id="su-pass" placeholder="Min. 8 characters">
+          </div>
+          <div class="f-group">
+            <label>Confirm Password</label>
+            <input type="password" id="su-pass2" placeholder="Repeat password">
+          </div>
+          <button class="submit-btn" onclick="handleSignup()">Submit Application</button>
+          <div class="switch-link" style="margin-top:14px">Already a creator? <a onclick="switchAuthTab('login',document.querySelector('.auth-tab:first-child'))">Sign in →</a></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 2: PENDING APPROVAL
+═══════════════════════════════════════ -->
+<div class="screen" id="screen-pending">
+  <div class="pending-card">
+    <div class="pending-icon">⏳</div>
+    <h2>Application Submitted!</h2>
+    <p>Your creator application is in the review queue. Our editorial team reviews every application personally — you'll receive an email at your university address once a decision has been made.</p>
+
+    <div class="pending-status-pill">
+      <span class="pulse-dot"></span>
+      Awaiting editorial approval
+    </div>
+
+    <div class="pending-info-row">
+      <span class="pir-icon">📧</span>
+      <div class="pir-text">
+        <strong id="pending-email-display">you@university.edu</strong>
+        <span>Application confirmation sent to this address</span>
+      </div>
+    </div>
+    <div class="pending-info-row">
+      <span class="pir-icon">🏛️</span>
+      <div class="pir-text">
+        <strong id="pending-university-display">Your University</strong>
+        <span>Affiliated institution on application</span>
+      </div>
+    </div>
+    <div class="pending-info-row" style="margin-bottom:24px">
+      <span class="pir-icon">⏱️</span>
+      <div class="pir-text">
+        <strong>Typically 2–5 business days</strong>
+        <span>Review timeline — check your email inbox</span>
+      </div>
+    </div>
+
+    <button class="pending-logout" onclick="goBackToAuth()">← Back to login</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 3: CREATOR DASHBOARD (approved)
+═══════════════════════════════════════ -->
+<div class="screen" id="screen-dashboard">
+
+  <!-- NAV -->
+  <nav class="creator-nav">
+    <div class="cn-logo">Alder<span>news</span><small>CREATOR</small></div>
+    <div class="cn-links">
+      <button class="cn-link active" onclick="showDashPage('home',this)">Dashboard</button>
+      <button class="cn-link" onclick="showDashPage('upload',this)">+ New Post</button>
+      <button class="cn-link" onclick="showDashPage('profile',this)">Profile</button>
+    </div>
+    <div class="cn-right">
+      <div class="creator-badge">✓ Verified Creator</div>
+      <div class="cn-avatar" id="dash-avatar">RK</div>
+      <button class="cn-logout" onclick="goBackToAuth()">Log out</button>
+    </div>
+  </nav>
+
+  <!-- ── DASHBOARD HOME ── -->
+  <div class="dash-page active" id="dp-home">
+    <div class="dash-header">
+      <h1 id="dash-welcome">Welcome back, Riya</h1>
+      <p>Your content · Verified creator · Symbiosis Institute of Media &amp; Communication</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Views</div>
+        <div class="stat-val">24.3k</div>
+        <div class="stat-sub">↑ 18% this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Published Posts</div>
+        <div class="stat-val">12</div>
+        <div class="stat-sub">↑ 3 this month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Saves by Readers</div>
+        <div class="stat-val">847</div>
+        <div class="stat-sub">↑ 122 new saves</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Editorial Score</div>
+        <div class="stat-val">9.1</div>
+        <div class="stat-sub">Balance rating / 10</div>
+      </div>
+    </div>
+
+    <div class="dash-content">
+      <div>
+        <div class="content-section-title">Your Recent Posts</div>
+
+        <div class="post-item">
+          <div class="post-type-dot dot-article">📝</div>
+          <div class="post-body">
+            <h4>Economic Survey 2026: India's GDP Set to Cross $4 Trillion</h4>
+            <p>Article · Pro-Ruling · 2h ago · 4,218 views</p>
+          </div>
+          <span class="post-status ps-live">● Live</span>
+          <div class="post-actions">
+            <button class="icon-btn" title="Edit">✏️</button>
+            <button class="icon-btn" title="View analytics">📊</button>
+          </div>
+        </div>
+
+        <div class="post-item">
+          <div class="post-type-dot dot-video">▶️</div>
+          <div class="post-body">
+            <h4>Budget 2026 Deep Dive: What the Finance Minister's Numbers Actually Mean</h4>
+            <p>Video · Pro-Ruling · Live · 24:18 · 12,400 views</p>
+          </div>
+          <span class="post-status ps-live">● Live</span>
+          <div class="post-actions">
+            <button class="icon-btn" title="Edit">✏️</button>
+            <button class="icon-btn" title="View analytics">📊</button>
+          </div>
+        </div>
+
+        <div class="post-item">
+          <div class="post-type-dot dot-article">📝</div>
+          <div class="post-body">
+            <h4>The Hidden Cost of Inflation: A Ground Report from Maharashtra's Markets</h4>
+            <p>Article · Pro-Opposition · Submitted 1d ago · In editorial review</p>
+          </div>
+          <span class="post-status ps-review">⏳ In Review</span>
+          <div class="post-actions">
+            <button class="icon-btn" title="Edit draft">✏️</button>
+          </div>
+        </div>
+
+        <div class="post-item">
+          <div class="post-type-dot dot-video">▶️</div>
+          <div class="post-body">
+            <h4>Campus Voices: Students React to the New Education Policy Draft</h4>
+            <p>Video · Explainer · Draft · Not yet submitted</p>
+          </div>
+          <span class="post-status ps-draft">Draft</span>
+          <div class="post-actions">
+            <button class="icon-btn" title="Continue editing">✏️</button>
+            <button class="icon-btn" title="Submit for review">📤</button>
+          </div>
+        </div>
+
+        <div style="margin-top:20px">
+          <button class="submit-btn" style="max-width:220px" onclick="showDashPage('upload',document.querySelector('.cn-link:nth-child(2)'))">+ Create New Post</button>
+        </div>
+      </div>
+
+      <div class="dash-sidebar">
+        <div class="sidebar-widget">
+          <div class="sw-title">📋 Editorial Guidelines</div>
+          <div class="guide-item"><div class="guide-num">1</div><div class="guide-text">Every article must present balanced perspectives or be clearly tagged Pro-Ruling / Pro-Opposition.</div></div>
+          <div class="guide-item"><div class="guide-num">2</div><div class="guide-text">Videos must be 3–30 minutes and include a written summary.</div></div>
+          <div class="guide-item"><div class="guide-num">3</div><div class="guide-text">All claims require at least one cited source.</div></div>
+          <div class="guide-item"><div class="guide-num">4</div><div class="guide-text">Review takes 24–48 hours. You'll be notified by email.</div></div>
+        </div>
+        <div class="sidebar-widget">
+          <div class="sw-title">🏆 This Week's Leaderboard</div>
+          <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--amber);color:white;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center">RK</div><div style="flex:1;font-size:13px;font-weight:600;color:var(--bark)">Riya Kulkarni</div><span style="font-size:12px;color:var(--amber);font-weight:600">12 stories</span></div>
+          <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--green);color:white;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center">AP</div><div style="flex:1;font-size:13px;font-weight:600;color:var(--bark)">Aryan Pillai</div><span style="font-size:12px;color:var(--amber);font-weight:600">9 stories</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:#1a56cc;color:white;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center">NK</div><div style="flex:1;font-size:13px;font-weight:600;color:var(--bark)">Neha Krishnan</div><span style="font-size:12px;color:var(--amber);font-weight:600">8 stories</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── UPLOAD PAGE ── -->
+  <div class="dash-page" id="dp-upload">
+    <div class="upload-page-inner">
+      <h2>Create New Post</h2>
+      <p class="up-sub">Upload an article or video. All posts go through editorial review before going live.</p>
+
+      <!-- Type chooser -->
+      <div class="type-chooser" id="type-chooser">
+        <button class="type-card" onclick="selectType('article',this)">
+          <div class="type-card-icon">📝</div>
+          <h3>Article</h3>
+          <p>Write or paste your article. Supports formatted text, citations, and image uploads.</p>
+        </button>
+        <button class="type-card" onclick="selectType('video',this)">
+          <div class="type-card-icon">🎬</div>
+          <h3>Video Report</h3>
+          <p>Upload your video file (MP4, MOV). Add a title, summary, and transcript.</p>
+        </button>
+      </div>
+
+      <!-- ── ARTICLE FORM ── -->
+      <div class="upload-form" id="uf-article">
+        <div class="f-group">
+          <label>Article Title <span style="color:var(--red)">*</span></label>
+          <input type="text" id="a-title" placeholder="Write a clear, specific headline…">
+        </div>
+        <div class="f-group">
+          <label>Perspective Tag <span style="color:var(--red)">*</span></label>
+          <div class="tag-picker" id="a-tag-picker">
+            <button class="tp-btn" onclick="selectTag(this,'ruling')">🟡 Pro-Ruling</button>
+            <button class="tp-btn" onclick="selectTag(this,'opp')">🟢 Pro-Opposition</button>
+            <button class="tp-btn" onclick="selectTag(this,'intl')">🔵 Global</button>
+            <button class="tp-btn" onclick="selectTag(this,'explainer')">🔮 Explainer</button>
+          </div>
+          <div class="f-hint">Choose the primary perspective your article represents. This is structural — readers always see both sides.</div>
+        </div>
+        <div class="f-group">
+          <label>Article Body <span style="color:var(--red)">*</span></label>
+          <textarea class="article-body-field" id="a-body" placeholder="Write your article here. Minimum 200 words. Include your sources inline or at the end…"></textarea>
+          <div class="f-hint" id="a-word-count">0 words · minimum 200 required</div>
+        </div>
+        <div class="f-group">
+          <label>Cover Image (optional)</label>
+          <div class="drop-zone" id="img-drop" ondragover="dzDrag(event,this)" ondragleave="dzLeave(this)" ondrop="dzDrop(event,this,'img')">
+            <input type="file" accept="image/*" onchange="handleFile(this,'img-preview','img-drop')">
+            <div class="drop-icon">🖼️</div>
+            <div class="drop-title">Drop an image or click to browse</div>
+            <div class="drop-sub">Recommended: 1200 × 630px</div>
+            <div class="drop-accepted">JPG, PNG, WEBP · max 5 MB</div>
+          </div>
+          <div class="file-preview" id="img-preview" style="display:none"></div>
+        </div>
+        <div class="upload-actions">
+          <button class="btn-draft" onclick="saveDraft('article')">Save as Draft</button>
+          <button class="btn-submit" onclick="submitPost('article')">Submit for Review →</button>
+        </div>
+      </div>
+
+      <!-- ── VIDEO FORM ── -->
+      <div class="upload-form" id="uf-video">
+        <div class="f-group">
+          <label>Video Title <span style="color:var(--red)">*</span></label>
+          <input type="text" id="v-title" placeholder="Descriptive title for your video report…">
+        </div>
+        <div class="f-group">
+          <label>Perspective Tag <span style="color:var(--red)">*</span></label>
+          <div class="tag-picker" id="v-tag-picker">
+            <button class="tp-btn" onclick="selectTag(this,'ruling')">🟡 Pro-Ruling</button>
+            <button class="tp-btn" onclick="selectTag(this,'opp')">🟢 Pro-Opposition</button>
+            <button class="tp-btn" onclick="selectTag(this,'intl')">🔵 Global</button>
+            <button class="tp-btn" onclick="selectTag(this,'explainer')">🔮 Explainer</button>
+          </div>
+        </div>
+        <div class="f-group">
+          <label>Video File <span style="color:var(--red)">*</span></label>
+          <div class="drop-zone" id="vid-drop" ondragover="dzDrag(event,this)" ondragleave="dzLeave(this)" ondrop="dzDrop(event,this,'vid')">
+            <input type="file" accept="video/mp4,video/mov,video/quicktime" onchange="handleFile(this,'vid-preview','vid-drop')">
+            <div class="drop-icon">🎬</div>
+            <div class="drop-title">Drop your video or click to browse</div>
+            <div class="drop-sub">MP4 or MOV recommended · 3–30 minutes</div>
+            <div class="drop-accepted">Max file size: 2 GB</div>
+          </div>
+          <div class="file-preview" id="vid-preview" style="display:none"></div>
+        </div>
+        <div class="f-group">
+          <label>Summary / Description <span style="color:var(--red)">*</span></label>
+          <textarea id="v-desc" placeholder="Brief summary of your video report — what's covered, who was interviewed, key takeaways. Min. 50 words." style="min-height:120px;width:100%;padding:12px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:9px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--bark);background:white;outline:none;resize:vertical;transition:border-color .2s"></textarea>
+        </div>
+        <div class="f-group">
+          <label>Transcript (optional but encouraged)</label>
+          <textarea id="v-transcript" placeholder="Paste a transcript or auto-generated captions here. Helps with accessibility and search." style="min-height:100px;width:100%;padding:12px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:9px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--bark);background:white;outline:none;resize:vertical;transition:border-color .2s"></textarea>
+        </div>
+        <div class="upload-actions">
+          <button class="btn-draft" onclick="saveDraft('video')">Save as Draft</button>
+          <button class="btn-submit" onclick="submitPost('video')">Submit for Review →</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── PROFILE PAGE ── -->
+  <div class="dash-page" id="dp-profile">
+    <div class="profile-page-inner">
+      <div class="profile-avatar-big" id="profile-av-big">RK</div>
+      <div class="profile-name" id="profile-name-disp">Riya Kulkarni</div>
+      <div class="profile-meta">Verified Creator · Symbiosis Institute of Media &amp; Communication · Joined June 2026</div>
+
+      <div class="profile-section">
+        <h3>Account Information</h3>
+        <div class="info-row"><span class="info-label">Full Name</span><span class="info-val">Riya Kulkarni</span></div>
+        <div class="info-row"><span class="info-label">University Email</span><span class="info-val">riya.kulkarni@symbiosis.edu</span></div>
+        <div class="info-row"><span class="info-label">Institution</span><span class="info-val">Symbiosis Institute of Media &amp; Communication</span></div>
+        <div class="info-row"><span class="info-label">Reporting Beat</span><span class="info-val">Politics &amp; Governance</span></div>
+        <div class="info-row"><span class="info-label">Account Status</span><span class="info-badge">✓ Approved Creator</span></div>
+      </div>
+
+      <div class="profile-section">
+        <h3>Creator Stats</h3>
+        <div class="info-row"><span class="info-label">Total Posts</span><span class="info-val">12 published · 2 in review · 1 draft</span></div>
+        <div class="info-row"><span class="info-label">Total Views</span><span class="info-val">24,318</span></div>
+        <div class="info-row"><span class="info-label">Reader Saves</span><span class="info-val">847</span></div>
+        <div class="info-row"><span class="info-label">Balance Score</span><span class="info-val">9.1 / 10 ⭐</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /screen-dashboard -->
+
+<!-- SUBMIT SUCCESS MODAL -->
+<div class="modal-overlay" id="submit-modal">
+  <div class="modal">
+    <div class="modal-icon">📬</div>
+    <h3>Submitted for Review!</h3>
+    <p id="submit-modal-msg">Your post has been submitted to the Aldernews editorial team. You'll receive a notification at your university email once it's reviewed — typically within 24–48 hours.</p>
+    <button class="modal-close" onclick="closeModal()">Back to Dashboard</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"><span id="t-icon">✅</span><span id="t-msg">Saved</span></div>
+
+<script>
+/* ─── State ─── */
+let currentUser = null;
+let selectedTag = null;
+
+/* ─── Uni email check ─── */
+function checkUniEmail(input, badgeId) {
+  const val = input.value.trim();
+  const badge = document.getElementById(badgeId);
+  const blocked = ['gmail.com','yahoo.com','hotmail.com','outlook.com','icloud.com','protonmail.com'];
+  const domain = val.split('@')[1]||'';
+  const isBlocked = blocked.includes(domain.toLowerCase());
+  badge.textContent = domain ? '@'+domain : '@edu';
+  badge.className = 'uni-badge' + (!isBlocked && domain ? ' valid' : '');
+}
+
+/* ─── Auth tab switch ─── */
+function switchAuthTab(tab, btn) {
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.form-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('fs-'+tab).classList.add('active');
+  document.getElementById('auth-error').style.display='none';
+}
+
+function showAuthError(msg) {
+  const b = document.getElementById('auth-error');
+  b.textContent = msg; b.style.display = 'block';
+}
+
+/* ─── Login ─── */
+function handleLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const blocked = ['gmail.com','yahoo.com','hotmail.com','outlook.com'];
+  const domain = email.split('@')[1]||'';
+
+  if (!email) return showAuthError('Please enter your university email.');
+  if (blocked.includes(domain.toLowerCase())) return showAuthError('Personal email addresses are not accepted. Use your university email.');
+  if (!pass) return showAuthError('Please enter your password.');
+
+  // Demo: simulate approved creator login
+  currentUser = { name: 'Riya Kulkarni', email: email, university: 'Symbiosis Institute of Media & Communication', initials: 'RK', approved: true };
+  enterDashboard();
+}
+
+/* ─── Signup ─── */
+function handleSignup() {
+  const fname = document.getElementById('su-fname').value.trim();
+  const lname = document.getElementById('su-lname').value.trim();
+  const uni   = document.getElementById('su-university').value.trim();
+  const email = document.getElementById('su-email').value.trim();
+  const area  = document.getElementById('su-area').value;
+  const bio   = document.getElementById('su-bio').value.trim();
+  const pass  = document.getElementById('su-pass').value;
+  const pass2 = document.getElementById('su-pass2').value;
+
+  const blocked = ['gmail.com','yahoo.com','hotmail.com','outlook.com','icloud.com','protonmail.com'];
+  const domain = email.split('@')[1]||'';
+
+  if (!fname||!lname) return showAuthError('Please enter your full name.');
+  if (!uni)           return showAuthError('Please enter your university name.');
+  if (!email)         return showAuthError('Please enter your university email.');
+  if (blocked.includes(domain.toLowerCase())) return showAuthError('❌ Personal email addresses are not accepted. Use your official university email (e.g. you@iimc.ac.in).');
+  if (!area)          return showAuthError('Please select your reporting area.');
+  const wc = bio.trim().split(/\s+/).filter(Boolean).length;
+  if (wc < 60)        return showAuthError(`Your application statement needs at least 60 words (currently ${wc}).`);
+  if (pass.length < 8) return showAuthError('Password must be at least 8 characters.');
+  if (pass !== pass2) return showAuthError('Passwords do not match.');
+
+  // Success → pending screen
+  document.getElementById('auth-error').style.display = 'none';
+  document.getElementById('pending-email-display').textContent = email;
+  document.getElementById('pending-university-display').textContent = uni;
+  showScreen('screen-pending');
+}
+
+/* ─── Navigation ─── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function enterDashboard() {
+  if (!currentUser) return;
+  document.getElementById('dash-avatar').textContent = currentUser.initials;
+  document.getElementById('dash-welcome').textContent = 'Welcome back, ' + currentUser.name.split(' ')[0];
+  document.getElementById('profile-av-big').textContent = currentUser.initials;
+  document.getElementById('profile-name-disp').textContent = currentUser.name;
+  showScreen('screen-dashboard');
+}
+
+function goBackToAuth() {
+  currentUser = null;
+  showScreen('screen-auth');
+}
+
+function showDashPage(name, btn) {
+  document.querySelectorAll('.dash-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.cn-link').forEach(l=>l.classList.remove('active'));
+  document.getElementById('dp-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  // Reset upload form when navigating to upload
+  if (name === 'upload') resetUploadForm();
+  window.scrollTo(0,0);
+}
+
+/* ─── Upload ─── */
+function selectType(type, btn) {
+  document.querySelectorAll('.type-card').forEach(c=>c.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.querySelectorAll('.upload-form').forEach(f=>f.classList.remove('active'));
+  document.getElementById('uf-'+type).classList.add('active');
+}
+
+function selectTag(btn, tag) {
+  const picker = btn.closest('.tag-picker');
+  picker.querySelectorAll('.tp-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedTag = tag;
+}
+
+function resetUploadForm() {
+  document.querySelectorAll('.type-card').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('.upload-form').forEach(f=>f.classList.remove('active'));
+  document.querySelectorAll('.tp-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.file-preview').forEach(p=>{p.style.display='none';p.innerHTML=''});
+  selectedTag = null;
+  ['a-title','a-body','v-title','v-desc','v-transcript'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+}
+
+/* ─── Word count for article ─── */
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'a-body') {
+    const wc = e.target.value.trim().split(/\s+/).filter(Boolean).length;
+    const el = document.getElementById('a-word-count');
+    el.textContent = wc + ' words' + (wc < 200 ? ' · minimum 200 required' : ' · ✓ requirement met');
+    el.className = 'f-hint' + (wc >= 200 ? '' : '');
+  }
+  if (e.target.id === 'su-bio') {
+    const wc = e.target.value.trim().split(/\s+/).filter(Boolean).length;
+    const el = document.getElementById('bio-count');
+    el.textContent = wc + ' / 60 words minimum' + (wc >= 60 ? ' ✓' : '');
+  }
+});
+
+/* ─── File upload ─── */
+function handleFile(input, previewId, dropId) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById(previewId);
+  const drop    = document.getElementById(dropId);
+  const ext     = file.name.split('.').pop().toUpperCase();
+  const size    = (file.size / 1024 / 1024).toFixed(1) + ' MB';
+  preview.style.display = 'flex';
+  preview.innerHTML = `<span class="file-preview-icon">${ext === 'MP4'||ext === 'MOV' ? '🎬' : '🖼️'}</span>
+    <span class="file-preview-name">${file.name}</span>
+    <span class="file-preview-size">${size}</span>
+    <button class="file-remove" onclick="removeFile('${previewId}','${dropId}')">✕</button>`;
+  drop.style.display = 'none';
+}
+
+function removeFile(previewId, dropId) {
+  document.getElementById(previewId).style.display = 'none';
+  document.getElementById(previewId).innerHTML = '';
+  document.getElementById(dropId).style.display = 'block';
+}
+
+function dzDrag(e, el) { e.preventDefault(); el.classList.add('dragover'); }
+function dzLeave(el)   { el.classList.remove('dragover'); }
+function dzDrop(e, el, type) {
+  e.preventDefault(); el.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const fakeInput = { files: [file] };
+  handleFile(fakeInput, type+'-preview', type+'-drop');
+}
+
+/* ─── Submit ─── */
+function submitPost(type) {
+  const title = document.getElementById(type==='article'?'a-title':'v-title').value.trim();
+  if (!title) return showToast('⚠️','Please add a title first');
+  if (!selectedTag) return showToast('⚠️','Please select a perspective tag');
+  if (type==='article') {
+    const wc = document.getElementById('a-body').value.trim().split(/\s+/).filter(Boolean).length;
+    if (wc < 200) return showToast('⚠️',`Article needs ${200-wc} more words`);
+  }
+  const modal = document.getElementById('submit-modal');
+  document.getElementById('submit-modal-msg').textContent = `"${title}" has been submitted to the Aldernews editorial team. You'll be notified at your university email once reviewed — typically within 24–48 hours.`;
+  modal.classList.add('open');
+}
+
+function saveDraft(type) {
+  const title = document.getElementById(type==='article'?'a-title':'v-title').value.trim();
+  showToast('💾', title ? `"${title.slice(0,30)}…" saved as draft` : 'Draft saved');
+}
+
+function closeModal() {
+  document.getElementById('submit-modal').classList.remove('open');
+  showDashPage('home', document.querySelector('.cn-link'));
+  resetUploadForm();
+}
+
+/* ─── Toast ─── */
+let _tt;
+function showToast(icon, msg) {
+  document.getElementById('t-icon').textContent = icon;
+  document.getElementById('t-msg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(_tt);
+  _tt = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+</script>
+</body>
+</html>

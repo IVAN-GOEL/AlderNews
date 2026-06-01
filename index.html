@@ -543,11 +543,11 @@ nav{
         <label>Password</label>
         <input type="password" id="login-password" placeholder="••••••••" oninput="clearLoginError()" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
-      <div class="forgot"><a>Forgot password?</a></div>
+      <div class="forgot"><a onclick="handleForgotPassword()">Forgot password?</a></div>
 
       <button class="login-submit" id="login-btn" onclick="doLogin()">Sign In →</button>
 
-      <div class="signup-link">New to Aldernews? <a onclick="showToast('🎓','Creator signup coming soon!')">Apply as a creator</a></div>
+      <div class="signup-link">New to Aldernews? <a href="creator-portal.html">Apply as a creator →</a></div>
     </div>
   </div>
 </div>
@@ -1166,6 +1166,13 @@ function showLoginError(msg) {
 }
 function clearLoginError() {
   document.getElementById('login-error').style.display = 'none';
+}
+function handleForgotPassword() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) { showLoginError('Enter your email address above first.'); return; }
+  firebase.auth().sendPasswordResetEmail(email)
+    .then(()=>showToast('📧','Password reset email sent!'))
+    .catch(err=>showLoginError(err.message));
 }
 
 /* ════════════════════════════════════════
